@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Navigate, Link, useNavigate } from 'react-router-dom';
+import { Navigate, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +16,8 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromOAuth = searchParams.get('fromOAuth') === 'true';
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -25,20 +28,21 @@ const Auth: React.FC = () => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
 
-  // Check for authentication redirect
+  // Check for authentication on load and OAuth redirects
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
-      if (event === 'SIGNED_IN' && session?.user) {
-        toast.success('Successfully signed in');
-        navigate('/dashboard');
+    const checkSession = async () => {
+      // If we detect a fromOAuth parameter, check if we have a session
+      if (fromOAuth) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          console.log("OAuth session detected, redirecting to dashboard");
+          navigate('/dashboard');
+        }
       }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
     };
-  }, [navigate]);
+    
+    checkSession();
+  }, [fromOAuth, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

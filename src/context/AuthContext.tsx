@@ -31,6 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // If user is logged in and on auth page, redirect to dashboard
+      if (session?.user && (location.pathname === '/auth' || location.pathname === '/')) {
+        navigate('/dashboard');
+      }
     });
 
     // Listen for auth changes
@@ -44,19 +49,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (_event === 'SIGNED_IN' && session?.user) {
         console.log("User signed in, redirecting to dashboard");
         
-        // Check if this is the first login for this user
-        if (_event === 'SIGNED_IN') {
-          // Ensure profile data is complete for Google users
+        // Ensure profile data is complete for users
+        if (session.user) {
           await ensureUserProfileComplete(session.user);
         }
         
-        // Always redirect to dashboard after sign in
+        // Redirect to dashboard after sign in regardless of current path
         navigate('/dashboard');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
   
   // Ensure Google users have their profile data in our profiles table
   const ensureUserProfileComplete = async (user: User) => {
@@ -136,13 +140,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const googleSignIn = async () => {
     try {
+      // Use a relative URL for the redirect to ensure it works across environments
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth?fromOAuth=true`,
         }
       });
       if (error) throw error;
+      // No need for navigation here as the OAuth flow will handle redirection
     } catch (error: any) {
       toast.error(error.message || 'Error signing in with Google');
       throw error;
