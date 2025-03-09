@@ -62,9 +62,8 @@ const Sidebar: React.FC = () => {
   return (
     <aside 
       className={cn(
-        "h-screen flex flex-col border-r border-border bg-sidebar transition-all duration-300 ease-in-out relative",
-        collapsed ? "w-20" : "w-64",
-        isMobile && "absolute z-50"
+        "h-screen flex flex-col border-r border-border bg-sidebar transition-all duration-300 ease-in-out fixed md:relative z-50",
+        collapsed ? "w-0 md:w-20 overflow-hidden md:overflow-visible" : "w-64"
       )}
     >
       <div className="flex flex-col h-full py-6">
@@ -88,7 +87,7 @@ const Sidebar: React.FC = () => {
             onClick={handleNewTask}
           >
             <Plus size={18} />
-            {!collapsed && <span>New Task</span>}
+            {!collapsed && <span>New Application</span>}
           </Button>
         </div>
         
@@ -144,7 +143,10 @@ const Sidebar: React.FC = () => {
       
       <button 
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-1/2 transform -translate-y-1/2 bg-background border border-border rounded-full p-1 shadow-sm z-10 hover:bg-accent transition-all duration-200"
+        className={cn(
+          "absolute -right-3 top-1/2 transform -translate-y-1/2 bg-background border border-border rounded-full p-1 shadow-sm z-10 hover:bg-accent transition-all duration-200",
+          isMobile && collapsed && "hidden md:block"
+        )}
       >
         {collapsed ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
       </button>
