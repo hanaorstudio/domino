@@ -69,10 +69,12 @@ const Auth: React.FC = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
+      // Update the redirectTo to use the current site URL without appending the path
+      // This will let Supabase handle the redirection correctly
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: window.location.origin
         }
       });
       if (error) throw error;

@@ -39,9 +39,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // If user signs in and we're not already on the dashboard, redirect
-      if (session?.user && location.pathname === '/auth') {
-        navigate('/dashboard');
+      // Handle successful login redirects
+      if (_event === 'SIGNED_IN' && session?.user) {
+        console.log("User signed in, redirecting to dashboard");
+        // If user signs in and we're not already on the dashboard, redirect
+        if (location.pathname === '/auth' || location.pathname === '/') {
+          navigate('/dashboard');
+        }
       }
     });
 
