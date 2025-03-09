@@ -64,16 +64,16 @@ const Index: React.FC = () => {
             
             <div className="mt-10 grid grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold">100+</div>
-                <div className="text-sm text-muted-foreground">Job templates</div>
+                <div className="text-2xl font-bold">AI</div>
+                <div className="text-sm text-muted-foreground">Assistant</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">24/7</div>
                 <div className="text-sm text-muted-foreground">Application tracking</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">1-click</div>
-                <div className="text-sm text-muted-foreground">Resume submission</div>
+                <div className="text-2xl font-bold">Smart</div>
+                <div className="text-sm text-muted-foreground">Job matching</div>
               </div>
             </div>
           </div>
@@ -82,9 +82,9 @@ const Index: React.FC = () => {
             <div className="aspect-[16/10] bg-gradient-mint-rose rounded-xl overflow-hidden shadow-xl animate-float">
               <div className="absolute inset-1 bg-white/90 backdrop-blur-sm rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-domino-green"></div>
+                  <div className="w-3 h-3 rounded-full bg-domino-rose"></div>
+                  <div className="w-3 h-3 rounded-full bg-domino-pink"></div>
                 </div>
                 
                 <div className="space-y-4">
