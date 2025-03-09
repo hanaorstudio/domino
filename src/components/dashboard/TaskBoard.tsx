@@ -29,7 +29,7 @@ const TaskBoard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const [showNewApplicationForm, setShowNewApplicationForm] = useState(false);
-  const [selectedColumn, setSelectedColumn] = useState('');
+  const [selectedColumn, setSelectedColumn] = useState('applied');
 
   const fetchJobApplications = async () => {
     if (!user) return;
@@ -118,6 +118,19 @@ const TaskBoard: React.FC = () => {
 
   useEffect(() => {
     fetchJobApplications();
+    
+    // Add event listener for opening the new task form
+    const handleOpenNewTaskForm = () => {
+      setSelectedColumn('applied');
+      setShowNewApplicationForm(true);
+    };
+    
+    window.addEventListener('open-new-task-form', handleOpenNewTaskForm);
+    
+    // Clean up the event listener
+    return () => {
+      window.removeEventListener('open-new-task-form', handleOpenNewTaskForm);
+    };
   }, [user]);
 
   // Function to handle adding a new job application

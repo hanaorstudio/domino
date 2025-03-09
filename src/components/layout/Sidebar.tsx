@@ -3,40 +3,51 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
-  List, 
   Calendar, 
-  Folder, 
-  Star, 
   User, 
   Settings,
   ArrowLeft,
   ArrowRight,
   Plus,
-  LogOut
+  LogOut,
+  Lightbulb,
+  BarChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   
   const isActive = (path: string) => location.pathname === path;
   
   const navItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
-    { icon: List, label: 'Tasks', path: '/tasks' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
-    { icon: Folder, label: 'Applications', path: '/applications' },
-    { icon: Star, label: 'Favorites', path: '/favorites' },
+    { icon: Lightbulb, label: 'Resume Ideas', path: '/resume-ideas' },
+    { icon: BarChart, label: 'Metrics', path: '/metrics' },
   ];
   
   const bottomNavItems = [
     { icon: Settings, label: 'Settings', path: '/settings' },
     { icon: User, label: 'Profile', path: '/profile' },
   ];
+
+  const handleNewTask = () => {
+    navigate('/dashboard');
+    // Small delay to ensure dashboard is loaded
+    setTimeout(() => {
+      // Trigger the new application form in the TaskBoard component
+      window.dispatchEvent(new CustomEvent('open-new-task-form'));
+      toast.info("Create a new job application");
+    }, 100);
+  };
 
   return (
     <aside 
@@ -50,10 +61,7 @@ const Sidebar: React.FC = () => {
           {!collapsed && (
             <div className="flex items-center gap-2 mb-8 animate-fade-in">
               <div className="flex flex-col">
-                <div className="flex items-center space-x-1">
-                  <div className="w-3 h-6 bg-domino-green rounded-sm"></div>
-                  <div className="w-3 h-6 bg-domino-rose rounded-sm"></div>
-                </div>
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-domino-green to-domino-rose"></div>
                 <span className="text-lg font-semibold tracking-tight">Tasks</span>
               </div>
             </div>
@@ -66,6 +74,7 @@ const Sidebar: React.FC = () => {
               collapsed ? "px-0 justify-center" : "",
               "bg-gradient-mint-rose hover:bg-gradient-green-pink transition-all duration-300"
             )}
+            onClick={handleNewTask}
           >
             <Plus size={18} />
             {!collapsed && <span>New Task</span>}

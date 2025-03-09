@@ -8,11 +8,8 @@ const NavBar: React.FC = () => {
   return (
     <nav className="flex justify-between items-center py-4 px-6 glass-panel rounded-xl mb-6 animate-fade-in-down">
       <div className="flex items-center gap-2">
-        <div className="flex flex-col mr-8">
-          <div className="flex items-center space-x-1">
-            <div className="w-3 h-6 bg-domino-green rounded-sm"></div>
-            <div className="w-3 h-6 bg-domino-rose rounded-sm"></div>
-          </div>
+        <div className="flex items-center mr-8">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-r from-domino-green to-domino-rose mr-2"></div>
           <span className="text-lg font-semibold tracking-tight">Tasks</span>
         </div>
         
