@@ -1,11 +1,20 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Calendar } from 'lucide-react';
+import { Calendar, MoreHorizontal } from 'lucide-react';
 import type { Task } from './BoardColumn';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TaskCardProps {
   task: Task;
+  onStatusChange?: (taskId: string, newStatus: string) => void;
 }
 
 const priorityColors = {
@@ -22,14 +31,44 @@ const labelColors = {
   "Full-time": "bg-teal-100 text-teal-700"
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-  const { title, company, deadline, priority, label } = task;
+const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
+  const { id, title, company, deadline, priority, label } = task;
+  
+  const handleStatusChange = async (newStatus: string) => {
+    if (onStatusChange) {
+      onStatusChange(id, newStatus);
+    }
+  };
   
   return (
     <div className="domino-card p-4 animate-slide-in-right">
-      <div className="mb-2">
-        <h4 className="font-medium text-sm">{title}</h4>
-        <p className="text-xs text-muted-foreground">{company}</p>
+      <div className="flex justify-between mb-2">
+        <div>
+          <h4 className="font-medium text-sm">{title}</h4>
+          <p className="text-xs text-muted-foreground">{company}</p>
+        </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1 hover:bg-accent rounded-md">
+              <MoreHorizontal size={16} className="text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => handleStatusChange('applied')}>
+              Move to Applied
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleStatusChange('interview')}>
+              Move to Interview
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleStatusChange('offer')}>
+              Move to Offer
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleStatusChange('rejected')}>
+              Move to Rejected
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
       <div className="domino-divider"></div>
@@ -42,7 +81,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
           </div>
         )}
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-wrap">
           {label && (
             <span className={cn(
               "text-xs px-2 py-0.5 rounded-full",

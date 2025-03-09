@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
@@ -11,19 +11,29 @@ import {
   Plus,
   LogOut,
   Lightbulb,
-  BarChart
+  BarChart,
+  Menu
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useMobile } from '@/hooks/use-mobile';
 
 const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useMobile();
+  
+  // Auto-collapse sidebar on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  }, [isMobile]);
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -53,7 +63,8 @@ const Sidebar: React.FC = () => {
     <aside 
       className={cn(
         "h-screen flex flex-col border-r border-border bg-sidebar transition-all duration-300 ease-in-out relative",
-        collapsed ? "w-20" : "w-64"
+        collapsed ? "w-20" : "w-64",
+        isMobile && "absolute z-50"
       )}
     >
       <div className="flex flex-col h-full py-6">
@@ -137,6 +148,16 @@ const Sidebar: React.FC = () => {
       >
         {collapsed ? <ArrowRight size={14} /> : <ArrowLeft size={14} />}
       </button>
+
+      {isMobile && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="fixed bottom-4 right-4 bg-primary text-primary-foreground p-3 rounded-full shadow-md z-50"
+          aria-label="Toggle Sidebar"
+        >
+          <Menu size={20} />
+        </button>
+      )}
     </aside>
   );
 };

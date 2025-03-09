@@ -116,6 +116,25 @@ const TaskBoard: React.FC = () => {
     }
   };
 
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('job_applications')
+        .update({ status: newStatus })
+        .eq('id', taskId);
+        
+      if (error) {
+        throw error;
+      }
+      
+      toast.success(`Application moved to ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`);
+      fetchJobApplications();
+    } catch (error: any) {
+      toast.error('Failed to update application status: ' + error.message);
+      console.error('Error updating application status:', error);
+    }
+  };
+
   useEffect(() => {
     fetchJobApplications();
     
@@ -151,7 +170,7 @@ const TaskBoard: React.FC = () => {
         </div>
       ) : (
         <div className="flex-1 overflow-x-auto">
-          <div className="flex gap-6 h-full pb-4">
+          <div className="flex flex-col sm:flex-row gap-6 h-full pb-4">
             {columns.map(column => (
               <BoardColumn
                 key={column.id}
@@ -159,7 +178,9 @@ const TaskBoard: React.FC = () => {
                 tasks={column.tasks}
                 count={column.tasks.length}
                 color={column.color}
+                columnId={column.id}
                 onAddTask={() => handleAddTask(column.id)}
+                onStatusChange={handleStatusChange}
               />
             ))}
           </div>

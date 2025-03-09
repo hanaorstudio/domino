@@ -18,7 +18,9 @@ interface BoardColumnProps {
   tasks: Task[];
   count: number;
   color?: string;
+  columnId: string;
   onAddTask?: () => void;
+  onStatusChange?: (taskId: string, newStatus: string) => void;
 }
 
 const BoardColumn: React.FC<BoardColumnProps> = ({
@@ -26,10 +28,12 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   tasks,
   count,
   color = "bg-domino-mint",
-  onAddTask
+  columnId,
+  onAddTask,
+  onStatusChange
 }) => {
   return (
-    <div className="flex flex-col h-full min-w-[280px] max-w-[280px] animate-fade-in">
+    <div className="flex flex-col h-full min-w-[280px] max-w-[280px] w-full sm:w-auto animate-fade-in">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className={cn("w-3 h-3 rounded-sm", color)}></div>
@@ -53,7 +57,11 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
           </div>
         ) : (
           tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard 
+              key={task.id} 
+              task={task} 
+              onStatusChange={onStatusChange}
+            />
           ))
         )}
       </div>
