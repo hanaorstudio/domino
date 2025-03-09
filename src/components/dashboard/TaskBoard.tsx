@@ -1,104 +1,127 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import BoardColumn from './BoardColumn';
 import type { Task } from './BoardColumn';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+
+interface JobApplication {
+  id: string;
+  company: string;
+  position: string;
+  status: string;
+  applied_date: string;
+  notes?: string;
+  url?: string;
+}
+
+interface Column {
+  id: string;
+  title: string;
+  color: string;
+  tasks: Task[];
+}
 
 const TaskBoard: React.FC = () => {
-  // Sample data
-  const columns = [
-    { 
-      id: 'applied', 
-      title: 'Applied', 
-      color: 'bg-domino-green',
-      tasks: [
-        {
-          id: '1',
-          title: 'Frontend Developer',
-          company: 'TechCorp',
-          deadline: 'June 15',
-          priority: 'high' as const,
-          label: 'Remote'
-        },
-        {
-          id: '2',
-          title: 'UX Designer',
-          company: 'DesignHub',
-          deadline: 'June 20',
-          priority: 'medium' as const,
-          label: 'Hybrid'
-        },
-        {
-          id: '3',
-          title: 'Product Manager',
-          company: 'Innovate Inc',
-          deadline: 'June 25',
-          priority: 'low' as const,
-          label: 'On-site'
+  const [columns, setColumns] = useState<Column[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchJobApplications = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('job_applications')
+          .select('*')
+          .order('applied_date', { ascending: false });
+          
+        if (error) {
+          throw error;
         }
-      ]
-    },
-    { 
-      id: 'interview', 
-      title: 'Interview', 
-      color: 'bg-domino-mint',
-      tasks: [
-        {
-          id: '4',
-          title: 'React Developer',
-          company: 'WebSolutions',
-          deadline: 'June 18',
-          priority: 'high' as const,
-          label: 'Remote'
-        },
-        {
-          id: '5',
-          title: 'Full Stack Engineer',
-          company: 'CodeMasters',
-          deadline: 'June 22',
-          priority: 'medium' as const,
-          label: 'Full-time'
+
+        if (data) {
+          // Transform job applications into our column structure
+          const applicationsByStatus = data.reduce((acc: Record<string, Task[]>, job: JobApplication) => {
+            const status = job.status.toLowerCase();
+            if (!acc[status]) {
+              acc[status] = [];
+            }
+            
+            // Calculate priority based on applied_date (just an example)
+            const appliedDate = new Date(job.applied_date);
+            const daysSinceApplied = Math.floor((Date.now() - appliedDate.getTime()) / (1000 * 60 * 60 * 24));
+            
+            let priority: 'low' | 'medium' | 'high' = 'medium';
+            if (daysSinceApplied < 7) {
+              priority = 'high';
+            } else if (daysSinceApplied > 21) {
+              priority = 'low';
+            }
+            
+            acc[status].push({
+              id: job.id,
+              title: job.position,
+              company: job.company,
+              deadline: appliedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+              priority,
+              label: job.notes?.includes('Remote') ? 'Remote' : 
+                     job.notes?.includes('Hybrid') ? 'Hybrid' : 
+                     job.notes?.includes('On-site') ? 'On-site' : undefined
+            });
+            
+            return acc;
+          }, {});
+          
+          // Create columns
+          const newColumns = [
+            {
+              id: 'applied',
+              title: 'Applied',
+              color: 'bg-domino-green',
+              tasks: applicationsByStatus['applied'] || []
+            },
+            {
+              id: 'interview',
+              title: 'Interview',
+              color: 'bg-domino-mint',
+              tasks: applicationsByStatus['interview'] || []
+            },
+            {
+              id: 'offer',
+              title: 'Offer',
+              color: 'bg-domino-pink',
+              tasks: applicationsByStatus['offer'] || []
+            },
+            {
+              id: 'rejected',
+              title: 'Rejected',
+              color: 'bg-domino-rose',
+              tasks: applicationsByStatus['rejected'] || []
+            }
+          ];
+          
+          setColumns(newColumns);
         }
-      ]
-    },
-    { 
-      id: 'offer', 
-      title: 'Offer', 
-      color: 'bg-domino-pink',
-      tasks: [
-        {
-          id: '6',
-          title: 'UI Developer',
-          company: 'PixelPerfect',
-          deadline: 'June 30',
-          priority: 'medium' as const,
-          label: 'Hybrid'
-        }
-      ]
-    },
-    { 
-      id: 'rejected', 
-      title: 'Rejected', 
-      color: 'bg-domino-rose',
-      tasks: [
-        {
-          id: '7',
-          title: 'DevOps Engineer',
-          company: 'CloudSys',
-          deadline: 'June 10',
-          priority: 'low' as const,
-          label: 'On-site'
-        },
-        {
-          id: '8',
-          title: 'Data Analyst',
-          company: 'DataDriven',
-          deadline: 'June 12',
-          priority: 'medium' as const,
-          label: 'Part-time'
-        }
-      ]
-    }
-  ];
+      } catch (error: any) {
+        toast.error('Failed to load job applications: ' + error.message);
+        console.error('Error loading job applications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobApplications();
+  }, [user]);
+
+  // Function to handle adding a new job application
+  const handleAddTask = async (columnId: string) => {
+    // This is a placeholder for future implementation
+    toast.info('Add job application functionality will be implemented soon');
+  };
 
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
@@ -106,19 +129,26 @@ const TaskBoard: React.FC = () => {
         <h2 className="text-xl font-semibold">Job Applications</h2>
       </div>
       
-      <div className="flex-1 overflow-x-auto">
-        <div className="flex gap-6 h-full pb-4">
-          {columns.map(column => (
-            <BoardColumn
-              key={column.id}
-              title={column.title}
-              tasks={column.tasks}
-              count={column.tasks.length}
-              color={column.color}
-            />
-          ))}
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1 overflow-x-auto">
+          <div className="flex gap-6 h-full pb-4">
+            {columns.map(column => (
+              <BoardColumn
+                key={column.id}
+                title={column.title}
+                tasks={column.tasks}
+                count={column.tasks.length}
+                color={column.color}
+                onAddTask={() => handleAddTask(column.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

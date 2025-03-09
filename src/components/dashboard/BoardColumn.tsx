@@ -18,13 +18,15 @@ interface BoardColumnProps {
   tasks: Task[];
   count: number;
   color?: string;
+  onAddTask?: () => void;
 }
 
 const BoardColumn: React.FC<BoardColumnProps> = ({
   title,
   tasks,
   count,
-  color = "bg-domino-mint"
+  color = "bg-domino-mint",
+  onAddTask
 }) => {
   return (
     <div className="flex flex-col h-full min-w-[280px] max-w-[280px] animate-fade-in">
@@ -36,15 +38,24 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
             {count}
           </span>
         </div>
-        <button className="p-1 rounded-md hover:bg-accent transition-colors">
+        <button 
+          className="p-1 rounded-md hover:bg-accent transition-colors"
+          onClick={onAddTask}
+        >
           <Plus size={18} className="text-muted-foreground" />
         </button>
       </div>
       
       <div className="flex-1 overflow-y-auto pb-4 pr-2 space-y-3 min-h-[200px]">
-        {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
-        ))}
+        {tasks.length === 0 ? (
+          <div className="h-24 flex items-center justify-center text-sm text-muted-foreground border border-dashed border-border rounded-md">
+            No applications yet
+          </div>
+        ) : (
+          tasks.map((task) => (
+            <TaskCard key={task.id} task={task} />
+          ))
+        )}
       </div>
     </div>
   );
