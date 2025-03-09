@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AreaChart, BarChart, PieChart, LineChart } from '@/components/ui/chart';
+import { AreaChart, BarChart, PieChart, LineChart } from '@/components/ui/charts';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
