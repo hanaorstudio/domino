@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
-  Calendar, 
   User, 
   Settings,
   ArrowLeft,
@@ -41,7 +40,6 @@ const Sidebar: React.FC = () => {
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: MessageSquare, label: 'AI Assistant', path: '/ai-assistant' },
     { icon: BarChart, label: 'Metrics', path: '/metrics' },
-    { icon: Calendar, label: 'Calendar', path: '/calendar' },
   ];
   
   const bottomNavItems = [
@@ -49,7 +47,7 @@ const Sidebar: React.FC = () => {
     { icon: User, label: 'Profile', path: '/profile' },
   ];
 
-  const handleNewTask = () => {
+  const handleNewApplication = () => {
     navigate('/dashboard');
     // Small delay to ensure dashboard is loaded
     setTimeout(() => {
@@ -84,7 +82,7 @@ const Sidebar: React.FC = () => {
               collapsed ? "px-0 justify-center" : "",
               "bg-gradient-mint-rose hover:bg-gradient-green-pink transition-all duration-300"
             )}
-            onClick={handleNewTask}
+            onClick={handleNewApplication}
           >
             <Plus size={18} />
             {!collapsed && <span>New Application</span>}
