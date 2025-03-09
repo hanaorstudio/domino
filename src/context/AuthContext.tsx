@@ -51,14 +51,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // Always redirect to dashboard after sign in
-        if (location.pathname === '/auth' || location.pathname === '/') {
-          navigate('/dashboard');
-        }
+        navigate('/dashboard');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, location.pathname]);
+  }, [navigate]);
   
   // Ensure Google users have their profile data in our profiles table
   const ensureUserProfileComplete = async (user: User) => {
@@ -141,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/dashboard`,
         }
       });
       if (error) throw error;
