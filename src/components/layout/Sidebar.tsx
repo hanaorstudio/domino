@@ -39,9 +39,9 @@ const Sidebar: React.FC = () => {
   
   const navItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
-    { icon: Calendar, label: 'Calendar', path: '/calendar' },
     { icon: MessageSquare, label: 'AI Assistant', path: '/ai-assistant' },
     { icon: BarChart, label: 'Metrics', path: '/metrics' },
+    { icon: Calendar, label: 'Calendar', path: '/calendar' },
   ];
   
   const bottomNavItems = [

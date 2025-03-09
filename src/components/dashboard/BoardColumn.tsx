@@ -3,6 +3,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import TaskCard from './TaskCard';
 import { Plus } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export interface Task {
   id: string;
@@ -32,8 +33,14 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   onAddTask,
   onStatusChange
 }) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex flex-col h-full min-w-[280px] sm:max-w-[280px] w-full animate-fade-in">
+    <div className={cn(
+      "flex flex-col h-full",
+      isMobile ? "min-w-full w-full mb-6" : "min-w-[280px] sm:max-w-[280px] w-full",
+      "animate-fade-in"
+    )}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className={cn("w-3 h-3 rounded-sm", color)}></div>
@@ -50,7 +57,10 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
         </button>
       </div>
       
-      <div className="flex-1 overflow-y-auto pb-4 pr-2 space-y-3 min-h-[200px]">
+      <div className={cn(
+        "flex-1 overflow-y-auto pb-4 pr-2 space-y-3",
+        isMobile ? "max-h-[300px]" : "min-h-[200px]"
+      )}>
         {tasks.length === 0 ? (
           <div className="h-24 flex items-center justify-center text-sm text-muted-foreground border border-dashed border-border rounded-md">
             No applications yet
