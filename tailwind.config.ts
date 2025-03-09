@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				domino: {
+					mint: '#C9F4D4',
+					green: '#68D089',
+					pink: '#FFDEE2',
+					rose: '#F2A1B1',
+					dark: '#2A3342',
+					light: '#F8FAFC'
 				}
 			},
 			borderRadius: {
@@ -70,25 +79,47 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'fade-in': {
+					from: { opacity: '0' },
+					to: { opacity: '1' }
+				},
+				'fade-in-up': {
+					from: { opacity: '0', transform: 'translateY(10px)' },
+					to: { opacity: '1', transform: 'translateY(0)' }
+				},
+				'fade-in-down': {
+					from: { opacity: '0', transform: 'translateY(-10px)' },
+					to: { opacity: '1', transform: 'translateY(0)' }
+				},
+				'slide-in-right': {
+					from: { transform: 'translateX(20px)', opacity: '0' },
+					to: { transform: 'translateX(0)', opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 6s ease-in-out infinite',
+				'fade-in': 'fade-in 0.5s ease-out',
+				'fade-in-up': 'fade-in-up 0.5s ease-out',
+				'fade-in-down': 'fade-in-down 0.5s ease-out',
+				'slide-in-right': 'slide-in-right 0.4s ease-out'
+			},
+			backgroundImage: {
+				'gradient-mint-rose': 'linear-gradient(135deg, #C9F4D4 0%, #FFDEE2 100%)',
+				'gradient-green-pink': 'linear-gradient(135deg, #68D089 0%, #F2A1B1 100%)',
+				'gradient-light': 'linear-gradient(135deg, #F8FAFC 0%, #EEF2F6 100%)'
 			}
 		}
 	},
