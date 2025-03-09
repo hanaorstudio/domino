@@ -31,10 +31,18 @@ export async function getJobApplications() {
   return data;
 }
 
-export async function addJobApplication(jobApplication: Omit<JobApplication, 'id' | 'user_id' | 'created_at' | 'updated_at'>) {
+export async function addJobApplication(jobApplication: Omit<JobApplication, 'id' | 'created_at' | 'updated_at'>) {
+  const { data: user } = await supabase.auth.getUser();
+  if (!user.user) {
+    throw new Error('User not authenticated');
+  }
+
   const { data, error } = await supabase
     .from('job_applications')
-    .insert(jobApplication)
+    .insert({
+      ...jobApplication,
+      user_id: user.user.id
+    })
     .select()
     .single();
 
