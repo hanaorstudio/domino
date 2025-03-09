@@ -54,7 +54,7 @@ const Sidebar: React.FC = () => {
                   <div className="w-3 h-6 bg-domino-green rounded-sm"></div>
                   <div className="w-3 h-6 bg-domino-rose rounded-sm"></div>
                 </div>
-                <span className="text-lg font-semibold tracking-tight">Domino</span>
+                <span className="text-lg font-semibold tracking-tight">Tasks</span>
               </div>
             </div>
           )}

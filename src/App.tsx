@@ -8,6 +8,8 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -30,8 +32,8 @@ const App = () => (
             <Route path="/calendar" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/applications" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/favorites" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
