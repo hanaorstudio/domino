@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -117,7 +118,7 @@ export default {
 			backgroundImage: {
 				'gradient-mint-rose': 'linear-gradient(135deg, #C9F4D4 0%, #FFDEE2 100%)',
 				'gradient-green-pink': 'linear-gradient(135deg, #68D089 0%, #F2A1B1 100%)',
-				'gradient-blue-purple': 'linear-gradient(135deg, #60A5FA 0%, #A78BFA 100%)',
+				'gradient-pink-green': 'linear-gradient(135deg, #F2A1B1 0%, #68D089 100%)',
 				'gradient-light': 'linear-gradient(135deg, #F8FAFC 0%, #EEF2F6 100%)'
 			}
 		}

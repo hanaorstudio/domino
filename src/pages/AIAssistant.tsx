@@ -19,7 +19,7 @@ type Message = {
 const initialMessages: Message[] = [
   {
     id: '1',
-    content: "Hi there! I'm Nexus, your AI career assistant. I can help you with job applications, resume writing, interview prep, and career advice. How can I assist you today?",
+    content: "Hi there! I'm Dom, your AI career assistant. I can help you with job applications, resume writing, interview prep, and career advice. How can I assist you today?",
     role: 'assistant',
     timestamp: new Date(),
   }
@@ -95,11 +95,11 @@ const AIAssistant: React.FC = () => {
           <Card className="glass-panel animate-fade-in h-[calc(100vh-12rem)]">
             <CardHeader className="border-b">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-r from-domino-pink to-domino-green flex items-center justify-center">
                   <Bot className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <CardTitle>Nexus</CardTitle>
+                  <CardTitle>Dom</CardTitle>
                   <CardDescription>
                     Your AI career assistant
                   </CardDescription>
@@ -123,7 +123,7 @@ const AIAssistant: React.FC = () => {
                         } p-3 rounded-lg`}
                       >
                         {message.role === 'assistant' && (
-                          <div className="h-6 w-6 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex-shrink-0 flex items-center justify-center">
+                          <div className="h-6 w-6 rounded-full bg-gradient-to-r from-domino-pink to-domino-green flex-shrink-0 flex items-center justify-center">
                             <Bot className="h-3 w-3 text-white" />
                           </div>
                         )}
@@ -145,7 +145,7 @@ const AIAssistant: React.FC = () => {
                   {isLoading && (
                     <div className="flex justify-start">
                       <div className="bg-muted p-3 rounded-lg flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex-shrink-0 flex items-center justify-center">
+                        <div className="h-6 w-6 rounded-full bg-gradient-to-r from-domino-pink to-domino-green flex-shrink-0 flex items-center justify-center">
                           <Bot className="h-3 w-3 text-white" />
                         </div>
                         <div className="flex space-x-1">
@@ -178,7 +178,7 @@ const AIAssistant: React.FC = () => {
                 />
                 <Button 
                   type="submit" 
-                  className="self-end bg-gradient-to-r from-indigo-500 to-purple-500"
+                  className="self-end bg-gradient-to-r from-domino-pink to-domino-green"
                   disabled={isLoading || !input.trim()}
                 >
                   <Send className="h-4 w-4" />

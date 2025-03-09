@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -54,7 +53,7 @@ const Dashboard: React.FC = () => {
                 
                 <GradientButton 
                   size="sm" 
-                  gradient="blue-purple"
+                  gradient="pink-green"
                   onClick={() => window.dispatchEvent(new CustomEvent('open-new-task-form'))}
                 >
                   New Application
