@@ -10,7 +10,7 @@ const NavBar: React.FC = () => {
       <div className="flex items-center gap-2 w-full sm:w-auto mb-4 sm:mb-0">
         <div className="flex items-center mr-4 sm:mr-8">
           <div className="h-8 w-8 rounded-full bg-gradient-to-r from-domino-green to-domino-rose mr-2"></div>
-          <span className="text-lg font-semibold tracking-tight">Tasks</span>
+          <span className="text-lg font-semibold tracking-tight">Domino</span>
         </div>
         
         <div className="relative w-full sm:w-auto">

@@ -33,7 +33,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   onStatusChange
 }) => {
   return (
-    <div className="flex flex-col h-full min-w-[280px] max-w-[280px] w-full sm:w-auto animate-fade-in">
+    <div className="flex flex-col h-full min-w-[280px] sm:max-w-[280px] w-full animate-fade-in">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className={cn("w-3 h-3 rounded-sm", color)}></div>

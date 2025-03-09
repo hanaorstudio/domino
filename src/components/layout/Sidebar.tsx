@@ -10,7 +10,7 @@ import {
   ArrowRight,
   Plus,
   LogOut,
-  Lightbulb,
+  MessageSquare,
   BarChart,
   Menu
 } from 'lucide-react';
@@ -19,14 +19,14 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   
   // Auto-collapse sidebar on mobile
   useEffect(() => {
@@ -40,7 +40,7 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: Calendar, label: 'Calendar', path: '/calendar' },
-    { icon: Lightbulb, label: 'Resume Ideas', path: '/resume-ideas' },
+    { icon: MessageSquare, label: 'AI Assistant', path: '/ai-assistant' },
     { icon: BarChart, label: 'Metrics', path: '/metrics' },
   ];
   
@@ -73,7 +73,7 @@ const Sidebar: React.FC = () => {
             <div className="flex items-center gap-2 mb-8 animate-fade-in">
               <div className="flex flex-col">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-r from-domino-green to-domino-rose"></div>
-                <span className="text-lg font-semibold tracking-tight">Tasks</span>
+                <span className="text-lg font-semibold tracking-tight">Domino</span>
               </div>
             </div>
           )}

@@ -12,7 +12,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import ResumeIdeas from "./pages/ResumeIdeas";
+import AIAssistant from "./pages/AIAssistant";
 import MetricsPage from "./pages/Metrics";
 
 const queryClient = new QueryClient();
@@ -31,7 +31,7 @@ const App = () => (
             {/* Protected Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/resume-ideas" element={<ProtectedRoute><ResumeIdeas /></ProtectedRoute>} />
+            <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
             <Route path="/metrics" element={<ProtectedRoute><MetricsPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
