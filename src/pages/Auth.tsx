@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const Auth: React.FC = () => {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, googleSignIn } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('login');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -69,17 +68,8 @@ const Auth: React.FC = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Update the redirectTo to use the current site URL without appending the path
-      // This will let Supabase handle the redirection correctly
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
-      });
-      if (error) throw error;
+      await googleSignIn();
     } catch (error: any) {
-      toast.error(error.message || 'Error signing in with Google');
       console.error(error);
     } finally {
       setGoogleLoading(false);

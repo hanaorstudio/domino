@@ -12,6 +12,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  googleSignIn: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state change event:", _event, session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
@@ -42,7 +43,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Handle successful login redirects
       if (_event === 'SIGNED_IN' && session?.user) {
         console.log("User signed in, redirecting to dashboard");
-        // If user signs in and we're not already on the dashboard, redirect
+        
+        // Check if this is the first login for this user
+        if (_event === 'SIGNED_IN') {
+          // Ensure profile data is complete for Google users
+          await ensureUserProfileComplete(session.user);
+        }
+        
+        // Always redirect to dashboard after sign in
         if (location.pathname === '/auth' || location.pathname === '/') {
           navigate('/dashboard');
         }
@@ -51,13 +59,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, [navigate, location.pathname]);
+  
+  // Ensure Google users have their profile data in our profiles table
+  const ensureUserProfileComplete = async (user: User) => {
+    try {
+      // First check if profile exists
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 is the "row not found" error code
+        console.error("Error fetching user profile:", fetchError);
+        return;
+      }
+      
+      if (existingProfile) {
+        console.log("User profile already exists");
+        return;
+      }
+      
+      // If profile doesn't exist, create it from user data
+      const userData = user.user_metadata || {};
+      const fullName = userData.full_name || userData.name || '';
+      const avatarUrl = userData.avatar_url || '';
+      
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert([
+          { 
+            id: user.id, 
+            full_name: fullName,
+            avatar_url: avatarUrl
+          }
+        ]);
+        
+      if (insertError) {
+        console.error("Error creating user profile:", insertError);
+      } else {
+        console.log("Created new profile for user");
+      }
+    } catch (error) {
+      console.error("Error in ensureUserProfileComplete:", error);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       toast.success('Successfully signed in');
-      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Error signing in');
       throw error;
@@ -82,6 +135,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   };
+  
+  const googleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        }
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || 'Error signing in with Google');
+      throw error;
+    }
+  };
 
   const signOut = async () => {
     try {
@@ -94,7 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, googleSignIn }}>
       {children}
     </AuthContext.Provider>
   );
