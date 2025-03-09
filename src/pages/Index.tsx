@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import GradientButton from '../components/ui/GradientButton';
@@ -23,10 +22,7 @@ const Index: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex flex-col">
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-6 bg-domino-green rounded-sm"></div>
-                <div className="w-3 h-6 bg-domino-rose rounded-sm"></div>
-              </div>
+              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-domino-green to-domino-rose"></div>
               <span className="text-lg font-semibold tracking-tight">Domino</span>
             </div>
           </div>
