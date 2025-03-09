@@ -11,14 +11,17 @@ import {
   Settings,
   ArrowLeft,
   ArrowRight,
-  Plus
+  Plus,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 
 const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { signOut } = useAuth();
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -105,6 +108,17 @@ const Sidebar: React.FC = () => {
               {!collapsed && <span>{item.label}</span>}
             </Link>
           ))}
+          
+          <button
+            onClick={() => signOut()}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 w-full rounded-lg transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-foreground",
+              collapsed && "justify-center px-0"
+            )}
+          >
+            <LogOut size={18} />
+            {!collapsed && <span>Sign Out</span>}
+          </button>
         </div>
       </div>
       

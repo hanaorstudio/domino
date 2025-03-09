@@ -1,11 +1,21 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import GradientButton from '../components/ui/GradientButton';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/auth');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-light flex flex-col">
@@ -21,8 +31,8 @@ const Index: React.FC = () => {
             </div>
           </div>
           
-          <GradientButton onClick={() => navigate('/dashboard')}>
-            Get Started
+          <GradientButton onClick={handleGetStarted}>
+            {user ? 'Dashboard' : 'Sign In'}
           </GradientButton>
         </div>
       </header>
@@ -40,10 +50,10 @@ const Index: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <GradientButton 
                 size="lg" 
-                onClick={() => navigate('/dashboard')}
+                onClick={handleGetStarted}
                 className="gap-2"
               >
-                Start tracking now
+                {user ? 'Go to dashboard' : 'Start tracking now'}
                 <ArrowRight size={18} />
               </GradientButton>
               
