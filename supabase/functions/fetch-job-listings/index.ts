@@ -12,6 +12,20 @@ const corsHeaders = {
 const JSEARCH_API_KEY = '6f4b204c37msh11412c85d4f8970p1a51f9jsn23ac42ff0187';
 const JSEARCH_HOST = 'jsearch.p.rapidapi.com';
 
+// Country code validation to ensure we only pass valid codes to the API
+function isValidCountryCode(code: string): boolean {
+  // List of valid ISO 3166-1 alpha-2 country codes that the JSearch API supports
+  const validCountryCodes = new Set([
+    'us', 'gb', 'ca', 'au', 'de', 'fr', 'es', 'it', 'nl', 'pl', 'ru', 'se', 
+    'no', 'fi', 'dk', 'ch', 'at', 'be', 'ie', 'br', 'mx', 'ar', 'cl', 'co', 
+    'pe', 'za', 'ng', 'eg', 'ma', 'ke', 'gh', 'tn', 'in', 'cn', 'jp', 'kr', 
+    'sg', 'my', 'ph', 'id', 'th', 'vn', 'ae', 'sa', 'qa', 'tr', 'il', 'nz',
+    'pt', 'gr', 'cz', 'hu', 'ro', 'bg', 'hr', 'si', 'sk', 'ee', 'lv', 'lt'
+  ]);
+  
+  return validCountryCodes.has(code.toLowerCase());
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -22,10 +36,20 @@ serve(async (req) => {
     // Parse request parameters
     const { query, location, country = 'us', page = 1, num_pages = 1 } = await req.json();
     
-    console.log(`Fetching job listings for: ${query} in ${location}, country code: ${country}`);
+    // Normalize and validate the country code
+    const countryCode = country.toLowerCase();
+    
+    console.log(`Fetching job listings for: ${query} in ${location}, country code: ${countryCode}`);
 
-    // API request options - use the country code directly
-    const url = `https://${JSEARCH_HOST}/search?query=${encodeURIComponent(query)}&page=${page}&num_pages=${num_pages}&country=${country}&date_posted=all`;
+    // Check if the country code is valid, default to 'us' if not
+    const validCountryCode = isValidCountryCode(countryCode) ? countryCode : 'us';
+    
+    if (validCountryCode !== countryCode) {
+      console.log(`Invalid country code: ${countryCode}, defaulting to 'us'`);
+    }
+    
+    // API request options with validated country code
+    const url = `https://${JSEARCH_HOST}/search?query=${encodeURIComponent(query)}&page=${page}&num_pages=${num_pages}&country=${validCountryCode}&date_posted=all`;
     
     const options = {
       method: 'GET',

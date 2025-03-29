@@ -27,10 +27,12 @@ export const fetchJobRecommendations = async (
   countryCode: string = 'us'
 ): Promise<JobListing[]> => {
   try {
-    console.log(`Fetching job recommendations with country code: ${countryCode}`);
+    // Normalize country code to lowercase
+    const normalizedCountryCode = countryCode.toLowerCase();
+    console.log(`Fetching job recommendations with country code: ${normalizedCountryCode}`);
     
     // Create a unique cache key that includes the country code
-    const cacheKey = `job_recommendations_${userId}_${countryCode}`;
+    const cacheKey = `job_recommendations_${userId}_${normalizedCountryCode}`;
     
     // Check local storage for cached recommendations
     const cachedRecommendationsStr = localStorage.getItem(cacheKey);
@@ -67,14 +69,14 @@ export const fetchJobRecommendations = async (
     }
     
     try {
-      console.log(`Fetching real job listings for: ${searchQuery} in ${location}, country code: ${countryCode}`);
+      console.log(`Fetching real job listings for: ${searchQuery} in ${location}, country code: ${normalizedCountryCode}`);
       
       // Call the Edge Function to get real job listings
       const { data: response, error } = await supabase.functions.invoke('fetch-job-listings', {
         body: {
           query: searchQuery,
           location: location || 'Remote',
-          country: countryCode, // Use the provided country code
+          country: normalizedCountryCode, // Use the normalized country code
           page: 1,
           num_pages: 1
         }
@@ -98,7 +100,7 @@ export const fetchJobRecommendations = async (
           expiresAt
         }));
       } else {
-        console.warn('No real job listings found or API limitation reached for country code:', countryCode);
+        console.warn(`No real job listings found for country code: ${normalizedCountryCode}`);
         // Return empty array instead of falling back to generated data
         jobListings = [];
       }
