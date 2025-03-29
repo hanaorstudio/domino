@@ -24,11 +24,14 @@ export const fetchJobRecommendations = async (
   userId: string,
   userRoles: string[] = [], 
   location: string = 'Remote',
-  country: string = 'United States'
+  countryCode: string = 'us'
 ): Promise<JobListing[]> => {
   try {
+    // Create a cache key that includes the country code
+    const cacheKey = `job_recommendations_${userId}_${countryCode}`;
+    
     // Check local storage for cached recommendations
-    const cachedRecommendationsStr = localStorage.getItem(`job_recommendations_${userId}`);
+    const cachedRecommendationsStr = localStorage.getItem(cacheKey);
     
     if (cachedRecommendationsStr) {
       const cachedData = JSON.parse(cachedRecommendationsStr);
@@ -57,14 +60,14 @@ export const fetchJobRecommendations = async (
     }
     
     try {
-      console.log(`Fetching real job listings for: ${searchQuery} in ${location}, ${country}`);
+      console.log(`Fetching real job listings for: ${searchQuery} in ${location}, country code: ${countryCode}`);
       
       // Call the Edge Function to get real job listings
       const { data: response, error } = await supabase.functions.invoke('fetch-job-listings', {
         body: {
           query: searchQuery,
           location: location || 'Remote',
-          country: country || 'United States',
+          country: countryCode, // Use the provided country code
           page: 1,
           num_pages: 1
         }
@@ -83,7 +86,7 @@ export const fetchJobRecommendations = async (
         
         // Cache the recommendations with a 30-minute expiration
         const expiresAt = Date.now() + (30 * 60 * 1000); // 30 minutes as milliseconds
-        localStorage.setItem(`job_recommendations_${userId}`, JSON.stringify({
+        localStorage.setItem(cacheKey, JSON.stringify({
           jobs: jobListings,
           expiresAt
         }));

@@ -3,18 +3,47 @@ import React, { useState, useEffect } from 'react';
 import { fetchJobRecommendations, JobListing } from '@/services/jobRecommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Star, Clock, MapPin, Briefcase, Building, RefreshCw, DollarSign } from 'lucide-react';
+import { ExternalLink, Star, Clock, MapPin, Briefcase, Building, RefreshCw, DollarSign, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface JobRecommendationsProps {
   userRoles: string[] | null;
   userLocation: string | null;
   userCountry: string | null;
 }
+
+// Country options for the selector
+const COUNTRIES = [
+  { value: 'us', label: 'United States' },
+  { value: 'gb', label: 'United Kingdom' },
+  { value: 'ca', label: 'Canada' },
+  { value: 'au', label: 'Australia' },
+  { value: 'de', label: 'Germany' },
+  { value: 'fr', label: 'France' },
+  { value: 'es', label: 'Spain' },
+  { value: 'it', label: 'Italy' },
+  { value: 'in', label: 'India' },
+  { value: 'sg', label: 'Singapore' },
+  { value: 'jp', label: 'Japan' },
+  { value: 'nl', label: 'Netherlands' },
+];
+
+// Get country code from country name
+const getCountryCode = (countryName: string): string => {
+  const country = COUNTRIES.find(c => c.label === countryName);
+  return country ? country.value : 'us'; // Default to US
+};
+
+// Get country name from country code
+const getCountryName = (countryCode: string): string => {
+  const country = COUNTRIES.find(c => c.value === countryCode);
+  return country ? country.label : 'United States'; // Default to United States
+};
 
 const JobRecommendations: React.FC<JobRecommendationsProps> = ({ 
   userRoles, 
@@ -26,6 +55,10 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [timeLeft, setTimeLeft] = useState<number>(30);
+  
+  // Use the user's country from props as default, or fall back to 'us'
+  const defaultCountryCode = userCountry ? getCountryCode(userCountry) : 'us';
+  const [selectedCountry, setSelectedCountry] = useState<string>(defaultCountryCode);
 
   const loadJobs = async (forceRefresh = false) => {
     if (!user) return;
@@ -41,7 +74,7 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
         user.id,
         userRoles || [], 
         userLocation || 'Remote',
-        userCountry || 'United States'
+        selectedCountry // Use the selected country code
       );
       
       setJobs(recommendedJobs);
@@ -55,12 +88,12 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
     }
   };
 
-  // Load jobs on mount and when user/roles/location changes
+  // Load jobs on mount and when user/roles/location/country changes
   useEffect(() => {
     if (user) {
       loadJobs();
     }
-  }, [user, userRoles, userLocation, userCountry]);
+  }, [user, userRoles, userLocation, selectedCountry]);
 
   // Update countdown timer every minute
   useEffect(() => {
@@ -81,6 +114,11 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
   const handleRefresh = () => {
     loadJobs(true);
     toast.success('Refreshed job recommendations');
+  };
+
+  const handleCountryChange = (value: string) => {
+    setSelectedCountry(value);
+    // Jobs will be reloaded by the useEffect
   };
 
   const getSourceColor = (source: string) => {
@@ -135,6 +173,29 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
         </div>
       </CardHeader>
       <CardContent>
+        {/* Country selector */}
+        <div className="mb-4 flex items-center">
+          <div className="flex items-center mr-2">
+            <Globe className="h-4 w-4 mr-1 text-muted-foreground" />
+            <span className="text-sm font-medium">Country:</span>
+          </div>
+          <Select
+            value={selectedCountry}
+            onValueChange={handleCountryChange}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select country" />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNTRIES.map((country) => (
+                <SelectItem key={country.value} value={country.value}>
+                  {country.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array(6).fill(0).map((_, i) => (

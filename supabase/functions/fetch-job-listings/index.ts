@@ -20,11 +20,12 @@ serve(async (req) => {
 
   try {
     // Parse request parameters
-    const { query, location, country, page = 1, num_pages = 1 } = await req.json();
-    console.log(`Fetching job listings for: ${query} in ${location}, ${country}`);
+    const { query, location, country = 'us', page = 1, num_pages = 1 } = await req.json();
+    
+    console.log(`Fetching job listings for: ${query} in ${location}, country code: ${country}`);
 
-    // API request options
-    const url = `https://${JSEARCH_HOST}/search?query=${encodeURIComponent(query)}&page=${page}&num_pages=${num_pages}&country=${country || 'us'}&date_posted=all`;
+    // API request options - use the country code directly
+    const url = `https://${JSEARCH_HOST}/search?query=${encodeURIComponent(query)}&page=${page}&num_pages=${num_pages}&country=${country}&date_posted=all`;
     
     const options = {
       method: 'GET',
