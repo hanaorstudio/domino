@@ -29,7 +29,7 @@ export const fetchJobRecommendations = async (
   try {
     console.log(`Fetching job recommendations with country code: ${countryCode}`);
     
-    // Create a cache key that includes the country code
+    // Create a unique cache key that includes the country code
     const cacheKey = `job_recommendations_${userId}_${countryCode}`;
     
     // Check local storage for cached recommendations
@@ -42,7 +42,7 @@ export const fetchJobRecommendations = async (
         // If recommendations haven't expired yet, return them
         if (cachedData.expiresAt && cachedData.expiresAt > Date.now()) {
           console.log('Using cached job recommendations');
-          return cachedData.jobs;
+          return cachedData.jobs || [];
         }
       } catch (parseError) {
         console.error('Error parsing cached job recommendations:', parseError);

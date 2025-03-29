@@ -38,7 +38,8 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
       
       // Clear cache if force refresh
       if (forceRefresh) {
-        localStorage.removeItem(`job_recommendations_${user.id}`);
+        const cacheKey = `job_recommendations_${user.id}_${selectedCountry}`;
+        localStorage.removeItem(cacheKey);
       }
       
       const recommendedJobs = await fetchJobRecommendations(
@@ -88,6 +89,8 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
   };
 
   const handleCountryChange = (value: string) => {
+    if (value === selectedCountry) return; // No change needed
+    
     setSelectedCountry(value);
     // Jobs will be reloaded by the useEffect
   };
