@@ -113,9 +113,9 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle>AI Job Recommendations</CardTitle>
+          <CardTitle>Real Job Recommendations</CardTitle>
           <CardDescription>
-            Personalized job matches based on real-time job listings
+            Real job postings matching your profile
           </CardDescription>
         </div>
         <div className="flex items-center gap-3">
@@ -203,8 +203,9 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
                   </div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-6">
-                  <p className="text-muted-foreground">No job recommendations available at this time.</p>
+                <div className="col-span-full text-center py-12">
+                  <p className="text-muted-foreground mb-2">No real job listings found matching your profile.</p>
+                  <p className="text-sm text-muted-foreground mb-4">Try refreshing or adjusting your profile preferences.</p>
                   <Button 
                     variant="outline" 
                     size="sm" 

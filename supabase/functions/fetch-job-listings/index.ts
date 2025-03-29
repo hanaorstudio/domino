@@ -24,7 +24,7 @@ serve(async (req) => {
     console.log(`Fetching job listings for: ${query} in ${location}, ${country}`);
 
     if (!JSEARCH_API_KEY) {
-      throw new Error('JSearch API key is not configured');
+      throw new Error('JSearch API key is not configured. Please add a JSEARCH_API_KEY secret in your Supabase project.');
     }
 
     // API request options
@@ -42,14 +42,28 @@ serve(async (req) => {
     const response = await fetch(url, options);
     
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      throw new Error(`API request failed with status ${response.status}: ${await response.text()}`);
     }
 
     const data = await response.json();
     console.log(`Received ${data.data?.length || 0} job listings`);
 
+    if (!data.data || data.data.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          data: [],
+          total: 0,
+          message: "No job listings found matching the criteria"
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     // Transform API response to our format
-    const jobListings = data.data?.map(job => ({
+    const jobListings = data.data.map(job => ({
       id: job.job_id || `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: job.job_title || 'Unknown Position',
       company: job.employer_name || 'Unknown Company',
@@ -64,13 +78,13 @@ serve(async (req) => {
       match: calculateMatchScore(job, query),
       description: job.job_description?.slice(0, 200) + '...' || null,
       employer_logo: job.employer_logo || null
-    })) || [];
+    }));
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         data: jobListings,
-        total: data.data?.length || 0
+        total: jobListings.length
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -81,7 +95,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error.message,
+        data: []
       }),
       { 
         status: 500,
