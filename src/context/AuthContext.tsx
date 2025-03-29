@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -25,36 +24,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const location = useLocation();
 
   useEffect(() => {
-    // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // If user is logged in and on auth page, redirect to dashboard
       if (session?.user && (location.pathname === '/auth' || location.pathname === '/')) {
         navigate('/dashboard');
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state change event:", _event, session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Handle successful login redirects
       if (_event === 'SIGNED_IN' && session?.user) {
         console.log("User signed in, redirecting to dashboard");
         
-        // Ensure profile data is complete for users
         if (session.user) {
           await ensureUserProfileComplete(session.user);
         }
         
-        // Redirect to dashboard after sign in regardless of current path
         navigate('/dashboard');
       }
     });
@@ -62,10 +55,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, [navigate, location.pathname]);
   
-  // Ensure Google users have their profile data in our profiles table
   const ensureUserProfileComplete = async (user: User) => {
     try {
-      // First check if profile exists
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -73,7 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
         
       if (fetchError && fetchError.code !== 'PGRST116') {
-        // PGRST116 is the "row not found" error code
         console.error("Error fetching user profile:", fetchError);
         return;
       }
@@ -83,7 +73,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // If profile doesn't exist, create it from user data
       const userData = user.user_metadata || {};
       const fullName = userData.full_name || userData.name || '';
       const avatarUrl = userData.avatar_url || '';
@@ -141,26 +130,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const googleSignIn = async () => {
     try {
       console.log("Starting Google sign in process");
-      // Use the current window location to dynamically build the redirect URL
+      console.log("Current window location:", window.location);
+      
       const redirectTo = `${window.location.origin}/auth?fromOAuth=true`;
-      console.log("Redirect URL:", redirectTo);
+      console.log("Generated redirect URL:", redirectTo);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectTo,
+          scopes: 'email profile'
         }
       });
       
       if (error) {
-        console.error("Google sign in error:", error);
+        console.error("Google sign in configuration error:", error);
+        toast.error('Error configuring Google sign-in: ' + error.message);
         throw error;
       }
       
-      // No need for navigation here as the OAuth flow will handle redirection
     } catch (error: any) {
-      console.error("Exception during Google sign in:", error);
-      toast.error(error.message || 'Error signing in with Google');
+      console.error("Complete Google sign-in exception:", error);
+      toast.error(error.message || 'Unexpected error signing in with Google');
       throw error;
     }
   };
