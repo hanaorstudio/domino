@@ -27,6 +27,8 @@ export const fetchJobRecommendations = async (
   countryCode: string = 'us'
 ): Promise<JobListing[]> => {
   try {
+    console.log(`Fetching job recommendations with country code: ${countryCode}`);
+    
     // Create a cache key that includes the country code
     const cacheKey = `job_recommendations_${userId}_${countryCode}`;
     
@@ -34,12 +36,17 @@ export const fetchJobRecommendations = async (
     const cachedRecommendationsStr = localStorage.getItem(cacheKey);
     
     if (cachedRecommendationsStr) {
-      const cachedData = JSON.parse(cachedRecommendationsStr);
-      
-      // If recommendations haven't expired yet, return them
-      if (cachedData.expiresAt && cachedData.expiresAt > Date.now()) {
-        console.log('Using cached job recommendations');
-        return cachedData.jobs;
+      try {
+        const cachedData = JSON.parse(cachedRecommendationsStr);
+        
+        // If recommendations haven't expired yet, return them
+        if (cachedData.expiresAt && cachedData.expiresAt > Date.now()) {
+          console.log('Using cached job recommendations');
+          return cachedData.jobs;
+        }
+      } catch (parseError) {
+        console.error('Error parsing cached job recommendations:', parseError);
+        // Continue to fetch new recommendations if parsing fails
       }
     }
     
@@ -80,7 +87,7 @@ export const fetchJobRecommendations = async (
       
       let jobListings: JobListing[] = [];
       
-      if (response.success && response.data && response.data.length > 0) {
+      if (response && response.success && response.data && response.data.length > 0) {
         console.log(`Received ${response.data.length} real job listings`);
         jobListings = response.data;
         

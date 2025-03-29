@@ -33,8 +33,9 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
   const loadJobs = async (forceRefresh = false) => {
     if (!user) return;
     
-    setLoading(true);
     try {
+      setLoading(true);
+      
       // Clear cache if force refresh
       if (forceRefresh) {
         localStorage.removeItem(`job_recommendations_${user.id}`);
