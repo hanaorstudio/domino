@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -27,7 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log("AuthProvider mounted, initializing auth state");
     
-    // Enforce a maximum loading time of 3 seconds
     const loadingTimeout = setTimeout(() => {
       if (loading) {
         console.log("Loading timeout triggered, forcing loading to false");
@@ -35,27 +33,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }, 3000);
 
-    // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       console.log("Auth state change:", event, newSession?.user?.id || "No user");
       
-      // Update state based on session
       setSession(newSession);
       setUser(newSession?.user ?? null);
       
-      // Handle specific auth events
       if (event === 'SIGNED_IN' && newSession?.user) {
         console.log("Signed in event detected, setting up profile if needed");
         
-        // Clear loading state immediately on sign in
         setLoading(false);
         
-        // Use setTimeout to avoid Supabase deadlocks
         setTimeout(() => {
           ensureUserProfileComplete(newSession.user);
           
-          // Always navigate to dashboard after successful sign in
-          // This ensures Google and Email auth flows behave the same
           console.log("Navigating to dashboard after successful sign in");
           navigate('/dashboard', { replace: true });
         }, 0);
@@ -65,7 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Then check for existing session
     const checkSession = async () => {
       try {
         console.log("Checking for existing session");
@@ -87,7 +77,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(() => {
             ensureUserProfileComplete(data.session.user);
             
-            // Only redirect if on auth or root page
             if (location.pathname === '/auth' || location.pathname === '/') {
               navigate('/dashboard', { replace: true });
             }
@@ -187,17 +176,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Starting Google sign in process");
       
-      // Get the current origin to use for redirect - using either deployed or local URL
       const origin = window.location.origin;
       const redirectUrl = `${origin}/auth`;
       console.log("Using redirect URL:", redirectUrl);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      toast.info("Redirecting to Google login...");
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: redirectUrl,
           queryParams: {
             prompt: 'select_account',
+            access_type: 'offline'
           },
           scopes: 'email profile'
         }
@@ -209,10 +200,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
-      // Note: The redirect happens automatically from Supabase,
-      // so we don't need to navigate here - the onAuthStateChange event will handle
-      // the redirect to dashboard after successful sign-in
-      
+      if (data?.url) {
+        console.log("Redirect URL received:", data.url);
+        window.location.href = data.url;
+      } else {
+        console.error("No redirect URL received from Supabase");
+        toast.error("Failed to start Google authentication");
+      }
     } catch (error: any) {
       console.error("Complete Google sign-in exception:", error);
       toast.error(error.message || 'Unexpected error signing in with Google');
