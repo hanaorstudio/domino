@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -32,6 +33,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user && (location.pathname === '/auth' || location.pathname === '/')) {
         navigate('/dashboard');
+      } else if (!session?.user && location.pathname !== '/' && location.pathname !== '/auth') {
+        // Redirect to auth page if not authenticated and trying to access protected routes
+        navigate('/auth');
       }
     });
 
@@ -49,6 +53,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         navigate('/dashboard');
+      } else if (_event === 'SIGNED_OUT') {
+        // Redirect to home page on sign out
+        navigate('/');
       }
     });
 
