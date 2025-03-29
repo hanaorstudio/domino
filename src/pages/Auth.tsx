@@ -15,6 +15,7 @@ const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('login');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const fromOAuth = searchParams.get('fromOAuth') === 'true';
@@ -31,18 +32,29 @@ const Auth: React.FC = () => {
   // Check for authentication on load and OAuth redirects
   useEffect(() => {
     const checkSession = async () => {
-      // If we detect a fromOAuth parameter, check if we have a session
-      if (fromOAuth) {
-        const { data } = await supabase.auth.getSession();
+      try {
+        console.log("Auth page loaded, checking session");
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error checking session:", error);
+          toast.error("Failed to check authentication status");
+        }
+        
         if (data.session) {
-          console.log("OAuth session detected, redirecting to dashboard");
+          console.log("Session found, redirecting to dashboard");
           navigate('/dashboard');
         }
+        
+        setAuthChecking(false);
+      } catch (err) {
+        console.error("Exception during session check:", err);
+        setAuthChecking(false);
       }
     };
     
     checkSession();
-  }, [fromOAuth, navigate]);
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +84,7 @@ const Auth: React.FC = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
+      console.log("Initiating Google sign in from Auth page");
       await googleSignIn();
     } catch (error: any) {
       console.error(error);
@@ -79,6 +92,15 @@ const Auth: React.FC = () => {
       setGoogleLoading(false);
     }
   };
+
+  // Show loading indicator while checking auth
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-gradient-light flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // Redirect to dashboard if already logged in
   if (user) {

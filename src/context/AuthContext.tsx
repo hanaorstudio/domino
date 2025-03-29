@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -130,15 +131,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const googleSignIn = async () => {
     try {
       console.log("Starting Google sign in process");
-      console.log("Current window location:", window.location);
       
-      const redirectTo = `${window.location.origin}/auth?fromOAuth=true`;
-      console.log("Generated redirect URL:", redirectTo);
+      // Do NOT use window.location.origin here as it can cause issues
+      // Instead, use the exact redirect URL that's configured in Supabase and Google Cloud Console
+      const redirectUrl = 'https://domino.lovable.app/auth';
+      console.log("Using redirect URL:", redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectTo,
+          redirectTo: redirectUrl,
+          queryParams: {
+            prompt: 'select_account', // Force Google to show the account selector
+          },
           scopes: 'email profile'
         }
       });
