@@ -1,0 +1,113 @@
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+
+// CORS headers for browser requests
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Set up environment variables for API access
+const JSEARCH_API_KEY = Deno.env.get('JSEARCH_API_KEY') || '';
+const JSEARCH_HOST = 'jsearch.p.rapidapi.com';
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Parse request parameters
+    const { query, location, country, page = 1, num_pages = 1 } = await req.json();
+    console.log(`Fetching job listings for: ${query} in ${location}, ${country}`);
+
+    if (!JSEARCH_API_KEY) {
+      throw new Error('JSearch API key is not configured');
+    }
+
+    // API request options
+    const url = `https://${JSEARCH_HOST}/search?query=${encodeURIComponent(query)}%20in%20${encodeURIComponent(location)}%2C%20${encodeURIComponent(country)}&page=${page}&num_pages=${num_pages}&date_posted=week`;
+    
+    const options = {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': JSEARCH_API_KEY,
+        'X-RapidAPI-Host': JSEARCH_HOST
+      }
+    };
+
+    console.log(`Requesting: ${url}`);
+    const response = await fetch(url, options);
+    
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`Received ${data.data?.length || 0} job listings`);
+
+    // Transform API response to our format
+    const jobListings = data.data?.map(job => ({
+      id: job.job_id || `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: job.job_title || 'Unknown Position',
+      company: job.employer_name || 'Unknown Company',
+      location: job.job_city ? `${job.job_city}, ${job.job_state || job.job_country || ''}` : (job.job_country || 'Remote'),
+      salary: job.job_min_salary && job.job_max_salary ? 
+        `${job.job_min_salary}-${job.job_max_salary} ${job.job_salary_currency || 'USD'}` : null,
+      type: job.job_employment_type || 'Full-time',
+      url: job.job_apply_link || job.job_google_link || '#',
+      posted: job.job_posted_at_datetime_utc ? 
+        new Date(job.job_posted_at_datetime_utc).toLocaleDateString() : 'Recently',
+      source: 'jsearch',
+      match: calculateMatchScore(job, query),
+      description: job.job_description?.slice(0, 200) + '...' || null,
+      employer_logo: job.employer_logo || null
+    })) || [];
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        data: jobListings,
+        total: data.data?.length || 0
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  } catch (error) {
+    console.error('Error fetching job listings:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+});
+
+// Helper function to calculate match score based on job details
+function calculateMatchScore(job, query) {
+  // Base score
+  let score = 70;
+  
+  // Boost score for relevant title matches
+  if (job.job_title?.toLowerCase().includes(query.toLowerCase())) {
+    score += 15;
+  }
+  
+  // Boost for recent jobs
+  if (job.job_posted_at_datetime_utc) {
+    const daysAgo = (new Date() - new Date(job.job_posted_at_datetime_utc)) / (1000 * 60 * 60 * 24);
+    if (daysAgo < 3) score += 10;
+    else if (daysAgo < 7) score += 5;
+  }
+  
+  // Cap at 99
+  return Math.min(score, 99);
+}

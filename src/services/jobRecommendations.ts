@@ -1,6 +1,7 @@
 
 import { fetchUserJobApplications } from './jobApplications';
 import { extractKeywords } from './jobUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface JobListing {
   id: string;
@@ -11,8 +12,10 @@ export interface JobListing {
   type: string;
   url: string;
   posted: string;
-  source: 'linkedin' | 'indeed' | 'glassdoor';
+  source: string;
   match: number;
+  description?: string | null;
+  employer_logo?: string | null;
   expiresAt?: number; // timestamp when the recommendations expire
 }
 
@@ -49,25 +52,75 @@ export const fetchJobRecommendations = async (
     // Extract positions/roles the user is frequently applying to
     const appliedPositions = applications.map(app => app.position.toLowerCase());
     
-    // In a real implementation, we'd send these keywords to an AI service
-    // For now, we'll simulate AI recommendations with realistic data
-    const recommendedJobs = generateRecommendedJobs(
-      keywords, 
-      userRoles, 
-      location,
-      country,
-      appliedCompanies,
-      appliedPositions
-    );
+    // Determine the job search query based on user data
+    let searchQuery = userRoles && userRoles.length > 0 
+      ? userRoles[0] // Use first role as primary search term
+      : (keywords.length > 0 ? keywords[0] : 'Software Developer'); // Fallback
     
-    // Cache the recommendations with a 30-minute expiration
-    const expiresAt = Date.now() + (30 * 60 * 1000); // 30 minutes as milliseconds
-    localStorage.setItem(`job_recommendations_${userId}`, JSON.stringify({
-      jobs: recommendedJobs,
-      expiresAt
-    }));
+    // Add most common keyword to improve search relevance
+    if (keywords.length > 0 && !searchQuery.includes(keywords[0])) {
+      searchQuery = `${keywords[0]} ${searchQuery}`;
+    }
     
-    return recommendedJobs;
+    try {
+      console.log(`Fetching real job listings for: ${searchQuery} in ${location}, ${country}`);
+      
+      // Call the Edge Function to get real job listings
+      const { data: response, error } = await supabase.functions.invoke('fetch-job-listings', {
+        body: {
+          query: searchQuery,
+          location: location || 'Remote',
+          country: country || 'United States',
+          page: 1,
+          num_pages: 1
+        }
+      });
+      
+      if (error) {
+        console.error('Error calling fetch-job-listings function:', error);
+        throw error;
+      }
+      
+      let jobListings: JobListing[] = [];
+      
+      if (response.success && response.data && response.data.length > 0) {
+        console.log(`Received ${response.data.length} real job listings`);
+        jobListings = response.data;
+      } else {
+        console.warn('No real job listings found, falling back to generated recommendations');
+        jobListings = generateRecommendedJobs(
+          keywords, 
+          userRoles, 
+          location,
+          country,
+          appliedCompanies,
+          appliedPositions
+        );
+      }
+      
+      // Cache the recommendations with a 30-minute expiration
+      const expiresAt = Date.now() + (30 * 60 * 1000); // 30 minutes as milliseconds
+      localStorage.setItem(`job_recommendations_${userId}`, JSON.stringify({
+        jobs: jobListings,
+        expiresAt
+      }));
+      
+      return jobListings;
+    } catch (apiError) {
+      console.error('Error getting real job listings, falling back to generated data:', apiError);
+      
+      // Fallback to generated data if API call fails
+      const recommendedJobs = generateRecommendedJobs(
+        keywords, 
+        userRoles, 
+        location,
+        country,
+        appliedCompanies,
+        appliedPositions
+      );
+      
+      return recommendedJobs;
+    }
   } catch (error) {
     console.error('Error fetching job recommendations:', error);
     return [];
@@ -75,6 +128,7 @@ export const fetchJobRecommendations = async (
 };
 
 // Generate job listings based on user preferences and application history
+// This is now a fallback method when the API is unavailable
 const generateRecommendedJobs = (
   keywords: string[] = [],
   userRoles: string[] = [],
