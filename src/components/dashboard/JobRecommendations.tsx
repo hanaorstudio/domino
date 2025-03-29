@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { fetchJobRecommendations, JobListing } from '@/services/jobService';
+import { fetchJobRecommendations, JobListing } from '@/services/jobRecommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Star, Clock, MapPin, Briefcase, Building, RefreshCw } from 'lucide-react';

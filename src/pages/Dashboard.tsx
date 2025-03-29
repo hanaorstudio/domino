@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -13,7 +14,7 @@ import JobInsights from '../components/dashboard/JobInsights';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import JobRecommendations from '@/components/dashboard/JobRecommendations';
-import { fetchUserProfile } from '@/services/jobService';
+import { fetchUserProfile } from '@/services/userProfile';
 import { Profile } from '@/types/profile';
 
 const Dashboard: React.FC = () => {
