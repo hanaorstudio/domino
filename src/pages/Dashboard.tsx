@@ -27,6 +27,17 @@ interface JobRecommendation {
   match: number;
 }
 
+// Profile interface to match the database schema
+interface Profile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+  roles: string[] | null;
+  location: string | null;
+}
+
 const Dashboard: React.FC = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
