@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -132,9 +131,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Starting Google sign in process");
       
-      // Do NOT use window.location.origin here as it can cause issues
-      // Instead, use the exact redirect URL that's configured in Supabase and Google Cloud Console
-      const redirectUrl = 'https://domino.lovable.app/auth';
+      // Use Vercel deployment URL
+      const redirectUrl = 'https://domino.vercel.app/auth';
       console.log("Using redirect URL:", redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({
