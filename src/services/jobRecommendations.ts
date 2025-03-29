@@ -24,15 +24,16 @@ export const fetchJobRecommendations = async (
   userId: string,
   userRoles: string[] = [], 
   location: string = 'Remote',
-  countryCode: string = 'us'
+  countryCode: string = 'us',
+  source: string = 'jsearch'
 ): Promise<JobListing[]> => {
   try {
     // Normalize country code to lowercase
     const normalizedCountryCode = countryCode.toLowerCase();
-    console.log(`Fetching job recommendations with country code: ${normalizedCountryCode}`);
+    console.log(`Fetching job recommendations with country code: ${normalizedCountryCode} from source: ${source}`);
     
-    // Create a unique cache key that includes the country code
-    const cacheKey = `job_recommendations_${userId}_${normalizedCountryCode}`;
+    // Create a unique cache key that includes the country code and source
+    const cacheKey = `job_recommendations_${userId}_${normalizedCountryCode}_${source}`;
     
     // Check local storage for cached recommendations
     const cachedRecommendationsStr = localStorage.getItem(cacheKey);
@@ -69,7 +70,7 @@ export const fetchJobRecommendations = async (
     }
     
     try {
-      console.log(`Fetching real job listings for: ${searchQuery} in ${location}, country code: ${normalizedCountryCode}`);
+      console.log(`Fetching real job listings for: ${searchQuery} in ${location}, country code: ${normalizedCountryCode}, source: ${source}`);
       
       // Call the Edge Function to get real job listings
       const { data: response, error } = await supabase.functions.invoke('fetch-job-listings', {
@@ -78,7 +79,8 @@ export const fetchJobRecommendations = async (
           location: location || 'Remote',
           country: normalizedCountryCode, // Use the normalized country code
           page: 1,
-          num_pages: 1
+          num_pages: 1,
+          source: source // Pass the selected API source
         }
       });
       
@@ -90,7 +92,7 @@ export const fetchJobRecommendations = async (
       let jobListings: JobListing[] = [];
       
       if (response && response.success && response.data && response.data.length > 0) {
-        console.log(`Received ${response.data.length} real job listings`);
+        console.log(`Received ${response.data.length} real job listings from ${source}`);
         jobListings = response.data;
         
         // Cache the recommendations with a 30-minute expiration
@@ -100,7 +102,7 @@ export const fetchJobRecommendations = async (
           expiresAt
         }));
       } else {
-        console.warn(`No real job listings found for country code: ${normalizedCountryCode}`);
+        console.warn(`No real job listings found for country code: ${normalizedCountryCode} from source: ${source}`);
         // Return empty array instead of falling back to generated data
         jobListings = [];
       }

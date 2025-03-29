@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchJobRecommendations, JobListing } from '@/services/jobRecommendations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshCw } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
@@ -29,6 +30,7 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
   // Use the user's country from props as default, or fall back to 'us'
   const defaultCountryCode = userCountry ? getCountryCode(userCountry) : 'us';
   const [selectedCountry, setSelectedCountry] = useState<string>(defaultCountryCode);
+  const [selectedSource, setSelectedSource] = useState<string>('jsearch');
 
   const loadJobs = async (forceRefresh = false) => {
     if (!user) return;
@@ -38,7 +40,7 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
       
       // Clear cache if force refresh
       if (forceRefresh) {
-        const cacheKey = `job_recommendations_${user.id}_${selectedCountry}`;
+        const cacheKey = `job_recommendations_${user.id}_${selectedCountry}_${selectedSource}`;
         localStorage.removeItem(cacheKey);
       }
       
@@ -46,7 +48,8 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
         user.id,
         userRoles || [], 
         userLocation || 'Remote',
-        selectedCountry
+        selectedCountry,
+        selectedSource
       );
       
       setJobs(recommendedJobs);
@@ -60,12 +63,12 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
     }
   };
 
-  // Load jobs on mount and when user/roles/location/country changes
+  // Load jobs on mount and when user/roles/location/country/source changes
   useEffect(() => {
     if (user) {
       loadJobs();
     }
-  }, [user, userRoles, userLocation, selectedCountry]);
+  }, [user, userRoles, userLocation, selectedCountry, selectedSource]);
 
   // Update countdown timer every minute
   useEffect(() => {
@@ -92,6 +95,13 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
     if (value === selectedCountry) return; // No change needed
     
     setSelectedCountry(value);
+    // Jobs will be reloaded by the useEffect
+  };
+
+  const handleSourceChange = (value: string) => {
+    if (value === selectedSource) return; // No change needed
+    
+    setSelectedSource(value);
     // Jobs will be reloaded by the useEffect
   };
 
@@ -127,10 +137,33 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <JobCountrySelector 
-          selectedCountry={selectedCountry} 
-          onCountryChange={handleCountryChange} 
-        />
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <div className="flex-1">
+            <JobCountrySelector 
+              selectedCountry={selectedCountry} 
+              onCountryChange={handleCountryChange} 
+            />
+          </div>
+          <div className="w-full md:w-48">
+            <div className="space-y-2">
+              <label htmlFor="source-selector" className="text-sm font-medium">
+                Data Source
+              </label>
+              <Select
+                value={selectedSource}
+                onValueChange={handleSourceChange}
+              >
+                <SelectTrigger id="source-selector" className="w-full">
+                  <SelectValue placeholder="Select source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="jsearch">JSearch API</SelectItem>
+                  <SelectItem value="linkedin">LinkedIn API</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
 
         <JobList 
           jobs={jobs}
