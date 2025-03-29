@@ -1,6 +1,6 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Globe, Search, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Globe, Search } from 'lucide-react';
 import { 
   Command,
   CommandInput,
@@ -52,7 +52,12 @@ const JobCountrySelector: React.FC<JobCountrySelectorProps> = ({
   onCountryChange 
 }) => {
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const selectedCountryName = getCountryName(selectedCountry);
+
+  const filteredCountries = COUNTRIES.filter(country =>
+    country.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="mb-4 flex items-center">
@@ -74,17 +79,23 @@ const JobCountrySelector: React.FC<JobCountrySelectorProps> = ({
         </PopoverTrigger>
         <PopoverContent className="w-[200px] p-0" align="start">
           <Command>
-            <CommandInput placeholder="Search country..." className="h-9" />
+            <CommandInput 
+              placeholder="Search country..." 
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              className="h-9" 
+            />
             <CommandList>
               <CommandEmpty>No country found.</CommandEmpty>
               <CommandGroup>
-                {COUNTRIES.map((country) => (
+                {filteredCountries.map((country) => (
                   <CommandItem
                     key={country.value}
                     value={country.value}
                     onSelect={(currentValue) => {
                       onCountryChange(currentValue);
                       setOpen(false);
+                      setSearchQuery("");
                     }}
                   >
                     {country.label}
