@@ -8,8 +8,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Set up environment variables for API access
-const JSEARCH_API_KEY = Deno.env.get('JSEARCH_API_KEY') || '';
+// Hardcoded API key from the provided cURL request
+const JSEARCH_API_KEY = '6f4b204c37msh11412c85d4f8970p1a51f9jsn23ac42ff0187';
 const JSEARCH_HOST = 'jsearch.p.rapidapi.com';
 
 serve(async (req) => {
@@ -23,12 +23,8 @@ serve(async (req) => {
     const { query, location, country, page = 1, num_pages = 1 } = await req.json();
     console.log(`Fetching job listings for: ${query} in ${location}, ${country}`);
 
-    if (!JSEARCH_API_KEY) {
-      throw new Error('JSearch API key is not configured. Please add a JSEARCH_API_KEY secret in your Supabase project.');
-    }
-
     // API request options
-    const url = `https://${JSEARCH_HOST}/search?query=${encodeURIComponent(query)}%20in%20${encodeURIComponent(location)}%2C%20${encodeURIComponent(country)}&page=${page}&num_pages=${num_pages}&date_posted=week`;
+    const url = `https://${JSEARCH_HOST}/search?query=${encodeURIComponent(query)}&page=${page}&num_pages=${num_pages}&country=${country || 'us'}&date_posted=all`;
     
     const options = {
       method: 'GET',
