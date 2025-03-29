@@ -19,12 +19,12 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-light flex flex-col">
-      <header className="container mx-auto py-6 px-4">
+      <header className="container mx-auto py-4 sm:py-6 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex flex-col">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-domino-green to-domino-rose"></div>
-              <span className="text-lg font-semibold tracking-tight">Domino</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-r from-domino-green to-domino-rose"></div>
+              <span className="text-base sm:text-lg font-semibold tracking-tight">Domino</span>
             </div>
           </div>
           
@@ -34,13 +34,13 @@ const Index: React.FC = () => {
         </div>
       </header>
       
-      <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
-        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+      <main className="flex-1 container mx-auto px-4 py-8 md:py-16 lg:py-20">
+        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 lg:gap-16">
           <div className="md:w-1/2 animate-fade-in-up">
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-4 sm:mb-6">
               Organize your job search like a <span className="bg-clip-text text-transparent bg-gradient-green-pink">professional</span>
             </h1>
-            <p className="text-lg text-muted-foreground mb-8">
+            <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8">
               Track applications, prepare for interviews, and land your dream job with our seamless job management platform.
             </p>
             
@@ -53,29 +53,21 @@ const Index: React.FC = () => {
                 {user ? 'Go to dashboard' : 'Start tracking now'}
                 <ArrowRight size={18} />
               </GradientButton>
-              
-              <button className="px-6 py-2 border border-border rounded-lg hover:bg-accent/50 transition-colors">
-                Watch demo
-              </button>
             </div>
             
-            <div className="mt-10 grid grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold">AI</div>
+            <div className="mt-8 sm:mt-10 grid grid-cols-2 gap-4 sm:gap-6">
+              <div className="text-center p-3 sm:p-4 rounded-lg bg-background/50 hover:bg-background/80 transition-colors duration-300">
+                <div className="text-xl sm:text-2xl font-bold">AI</div>
                 <div className="text-sm text-muted-foreground">Assistant</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">24/7</div>
+              <div className="text-center p-3 sm:p-4 rounded-lg bg-background/50 hover:bg-background/80 transition-colors duration-300">
+                <div className="text-xl sm:text-2xl font-bold">24/7</div>
                 <div className="text-sm text-muted-foreground">Application tracking</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">Smart</div>
-                <div className="text-sm text-muted-foreground">Job matching</div>
               </div>
             </div>
           </div>
           
-          <div className="md:w-1/2 relative animate-fade-in">
+          <div className="md:w-1/2 relative animate-fade-in mt-8 md:mt-0">
             <div className="aspect-[16/10] bg-gradient-mint-rose rounded-xl overflow-hidden shadow-xl animate-float">
               <div className="absolute inset-1 bg-white/90 backdrop-blur-sm rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
@@ -105,7 +97,7 @@ const Index: React.FC = () => {
         </div>
       </main>
       
-      <footer className="container mx-auto py-6 px-4 border-t border-border">
+      <footer className="container mx-auto py-4 sm:py-6 px-4 border-t border-border">
         <div className="text-center text-sm text-muted-foreground">
           © 2025 Domino by Ziv Hanaor. Track your career steps like a pro.
         </div>
