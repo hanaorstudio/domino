@@ -7,20 +7,33 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Mail } from 'lucide-react';
+import { User, Mail, MapPin, Globe } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { Profile } from '@/types/profile';
 
-interface Profile {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-}
+const countries = [
+  'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Australia', 
+  'Japan', 'Spain', 'Italy', 'Brazil', 'India', 'Singapore'
+];
 
 const ProfilePage: React.FC = () => {
   const { user, session } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [fullName, setFullName] = useState('');
+  const [location, setLocation] = useState('Remote');
+  const [country, setCountry] = useState('United States');
   const [isSaving, setIsSaving] = useState(false);
+
+  const form = useForm({
+    defaultValues: {
+      fullName: '',
+      location: 'Remote',
+      country: 'United States'
+    }
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -39,6 +52,8 @@ const ProfilePage: React.FC = () => {
         
         setProfile(data);
         setFullName(data.full_name || '');
+        setLocation(data.location || 'Remote');
+        setCountry(data.country || 'United States');
         
       } catch (error: any) {
         console.error('Error fetching profile:', error);
@@ -59,13 +74,22 @@ const ProfilePage: React.FC = () => {
       
       const { error } = await supabase
         .from('profiles')
-        .update({ full_name: fullName })
+        .update({ 
+          full_name: fullName,
+          location: location,
+          country: country
+        })
         .eq('id', user.id);
 
       if (error) throw error;
       
       toast.success('Profile updated successfully');
-      setProfile(prev => prev ? { ...prev, full_name: fullName } : null);
+      setProfile(prev => prev ? { 
+        ...prev, 
+        full_name: fullName,
+        location: location,
+        country: country
+      } : null);
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -126,9 +150,46 @@ const ProfilePage: React.FC = () => {
                         />
                       </div>
                       
+                      <div>
+                        <label className="text-sm font-medium block mb-1" htmlFor="location">
+                          Location
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <MapPin size={16} className="text-muted-foreground" />
+                          <Input
+                            id="location"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="City or Remote"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium block mb-1" htmlFor="country">
+                          Country
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <Globe size={16} className="text-muted-foreground" />
+                          <Select
+                            value={country}
+                            onValueChange={setCountry}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {countries.map((c) => (
+                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
                       <Button 
                         onClick={handleSaveProfile} 
-                        disabled={isSaving || fullName === profile?.full_name}
+                        disabled={isSaving}
                       >
                         {isSaving ? 'Saving...' : 'Save Changes'}
                       </Button>

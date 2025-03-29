@@ -12,9 +12,14 @@ import { format } from 'date-fns';
 interface JobRecommendationsProps {
   userRoles: string[] | null;
   userLocation: string | null;
+  userCountry: string | null;
 }
 
-const JobRecommendations: React.FC<JobRecommendationsProps> = ({ userRoles, userLocation }) => {
+const JobRecommendations: React.FC<JobRecommendationsProps> = ({ 
+  userRoles, 
+  userLocation,
+  userCountry
+}) => {
   const { user } = useAuth();
   const [jobs, setJobs] = useState<JobListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +39,8 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({ userRoles, user
       const recommendedJobs = await fetchJobRecommendations(
         user.id,
         userRoles || [], 
-        userLocation || 'Remote'
+        userLocation || 'Remote',
+        userCountry || 'United States'
       );
       
       setJobs(recommendedJobs);
@@ -53,7 +59,7 @@ const JobRecommendations: React.FC<JobRecommendationsProps> = ({ userRoles, user
     if (user) {
       loadJobs();
     }
-  }, [user, userRoles, userLocation]);
+  }, [user, userRoles, userLocation, userCountry]);
 
   // Update countdown timer every minute
   useEffect(() => {

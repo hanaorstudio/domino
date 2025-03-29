@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -103,7 +102,8 @@ const Dashboard: React.FC = () => {
             {!loading && profile && (
               <JobRecommendations 
                 userRoles={profile.roles} 
-                userLocation={profile.location} 
+                userLocation={profile.location}
+                userCountry={profile.country} 
               />
             )}
           </div>

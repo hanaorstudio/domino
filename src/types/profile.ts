@@ -7,4 +7,5 @@ export interface Profile {
   updated_at: string;
   roles: string[] | null;
   location: string | null;
+  country: string | null;
 }
