@@ -91,7 +91,7 @@ export const fetchJobRecommendations = async (
           expiresAt
         }));
       } else {
-        console.warn('No real job listings found, returning empty array');
+        console.warn('No real job listings found or API limitation reached for country code:', countryCode);
         // Return empty array instead of falling back to generated data
         jobListings = [];
       }
