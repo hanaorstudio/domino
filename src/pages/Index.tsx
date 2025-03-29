@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import GradientButton from '../components/ui/GradientButton';
@@ -106,7 +107,7 @@ const Index: React.FC = () => {
       
       <footer className="container mx-auto py-6 px-4 border-t border-border">
         <div className="text-center text-sm text-muted-foreground">
-          © 2023 Domino. Track your career steps like a pro.
+          © 2025 Domino by Ziv Hanaor. Track your career steps like a pro.
         </div>
       </footer>
     </div>
