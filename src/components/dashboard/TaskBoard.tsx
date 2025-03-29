@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import BoardColumn from './BoardColumn';
 import type { Task } from './BoardColumn';
@@ -6,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import NewApplicationForm from './NewApplicationForm';
+import { deleteJobApplication } from '@/services/taskService';
 
 interface JobApplication {
   id: string;
@@ -46,14 +46,12 @@ const TaskBoard: React.FC = () => {
       }
 
       if (data) {
-        // Transform job applications into our column structure
         const applicationsByStatus = data.reduce((acc: Record<string, Task[]>, job: JobApplication) => {
           const status = job.status.toLowerCase();
           if (!acc[status]) {
             acc[status] = [];
           }
           
-          // Calculate priority based on applied_date (just an example)
           const appliedDate = new Date(job.applied_date);
           const daysSinceApplied = Math.floor((Date.now() - appliedDate.getTime()) / (1000 * 60 * 60 * 24));
           
@@ -78,7 +76,6 @@ const TaskBoard: React.FC = () => {
           return acc;
         }, {});
         
-        // Create columns
         const newColumns = [
           {
             id: 'applied',
@@ -135,10 +132,20 @@ const TaskBoard: React.FC = () => {
     }
   };
 
+  const handleDeleteApplication = async (taskId: string) => {
+    try {
+      await deleteJobApplication(taskId);
+      toast.success('Application deleted successfully');
+      fetchJobApplications();
+    } catch (error: any) {
+      toast.error('Failed to delete application: ' + error.message);
+      console.error('Error deleting application:', error);
+    }
+  };
+
   useEffect(() => {
     fetchJobApplications();
     
-    // Add event listener for opening the new task form
     const handleOpenNewTaskForm = () => {
       setSelectedColumn('applied');
       setShowNewApplicationForm(true);
@@ -146,13 +153,11 @@ const TaskBoard: React.FC = () => {
     
     window.addEventListener('open-new-task-form', handleOpenNewTaskForm);
     
-    // Clean up the event listener
     return () => {
       window.removeEventListener('open-new-task-form', handleOpenNewTaskForm);
     };
   }, [user]);
 
-  // Function to handle adding a new job application
   const handleAddTask = (columnId: string) => {
     setSelectedColumn(columnId);
     setShowNewApplicationForm(true);
@@ -181,6 +186,7 @@ const TaskBoard: React.FC = () => {
                 columnId={column.id}
                 onAddTask={() => handleAddTask(column.id)}
                 onStatusChange={handleStatusChange}
+                onDeleteTask={handleDeleteApplication}
               />
             ))}
           </div>

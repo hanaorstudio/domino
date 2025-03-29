@@ -22,6 +22,7 @@ interface BoardColumnProps {
   columnId: string;
   onAddTask?: () => void;
   onStatusChange?: (taskId: string, newStatus: string) => void;
+  onDeleteTask?: (taskId: string) => void;
 }
 
 const BoardColumn: React.FC<BoardColumnProps> = ({
@@ -31,7 +32,8 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
   color = "bg-domino-mint",
   columnId,
   onAddTask,
-  onStatusChange
+  onStatusChange,
+  onDeleteTask
 }) => {
   const isMobile = useIsMobile();
 
@@ -71,6 +73,7 @@ const BoardColumn: React.FC<BoardColumnProps> = ({
               key={task.id} 
               task={task} 
               onStatusChange={onStatusChange}
+              onDelete={onDeleteTask}
             />
           ))
         )}
