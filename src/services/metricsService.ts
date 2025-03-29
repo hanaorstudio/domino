@@ -25,8 +25,9 @@ export interface PersonalizedMetrics {
 // Function to save user emotion data
 export const saveEmotionData = async (userId: string, data: EmotionData): Promise<boolean> => {
   try {
+    // Use the less type-safe version with explicit casting to avoid TypeScript errors
     const { error } = await supabase
-      .from('user_emotions')
+      .from('user_emotions' as any)
       .insert({
         user_id: userId,
         date: data.date,
@@ -34,7 +35,7 @@ export const saveEmotionData = async (userId: string, data: EmotionData): Promis
         motivation: data.motivation,
         stress: data.stress,
         satisfaction: data.satisfaction
-      });
+      } as any);
 
     if (error) throw error;
     
@@ -50,15 +51,23 @@ export const saveEmotionData = async (userId: string, data: EmotionData): Promis
 // Function to get user emotion data
 export const getEmotionData = async (userId: string): Promise<EmotionData[]> => {
   try {
+    // Use the less type-safe version with explicit casting to avoid TypeScript errors
     const { data, error } = await supabase
-      .from('user_emotions')
+      .from('user_emotions' as any)
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false });
 
     if (error) throw error;
     
-    return data as EmotionData[] || [];
+    // Map the returned data to our EmotionData interface
+    return (data || []).map(item => ({
+      date: item.date,
+      confidence: item.confidence,
+      motivation: item.motivation,
+      stress: item.stress,
+      satisfaction: item.satisfaction
+    }));
   } catch (error) {
     console.error('Error fetching emotion data:', error);
     return [];
