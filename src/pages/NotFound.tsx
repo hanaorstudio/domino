@@ -14,6 +14,10 @@ const NotFound: React.FC = () => {
     );
   }, [location.pathname]);
 
+  const handleGoHome = () => {
+    navigate("/", { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
       <div className="glass-panel p-8 rounded-xl max-w-md w-full text-center animate-fade-in-up">
@@ -25,11 +29,14 @@ const NotFound: React.FC = () => {
         </div>
         
         <h1 className="text-5xl font-bold mb-4">404</h1>
-        <p className="text-xl text-muted-foreground mb-6">
+        <p className="text-xl text-muted-foreground mb-2">
           Oops! This page has fallen between the cracks
         </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          The page you're looking for doesn't exist or is temporarily unavailable
+        </p>
         
-        <GradientButton onClick={() => navigate("/")} className="w-full">
+        <GradientButton onClick={handleGoHome} className="w-full">
           Return to Home
         </GradientButton>
       </div>

@@ -15,13 +15,21 @@ import NotFound from "./pages/NotFound";
 import AIAssistant from "./pages/AIAssistant";
 import MetricsPage from "./pages/Metrics";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      retryDelay: 1000,
+      staleTime: 60 * 1000,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
+      <Sonner position="top-right" closeButton />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
@@ -35,7 +43,9 @@ const App = () => (
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             
-            <Route path="*" element={<NotFound />} />
+            {/* Improved 404 handling */}
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

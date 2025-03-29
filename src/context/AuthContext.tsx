@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -184,7 +185,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Starting Google sign in process");
       
-      const redirectUrl = window.location.origin + '/auth';
+      // Get the current origin to use for redirect - using either deployed or local URL
+      const origin = window.location.origin;
+      const redirectUrl = `${origin}/auth`;
       console.log("Using redirect URL:", redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({
