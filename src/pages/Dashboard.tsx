@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
 import TaskBoard from '../components/dashboard/TaskBoard';
@@ -7,16 +8,117 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Clock, LineChart, ListTodo, StarIcon, Bell, Users } from 'lucide-react';
+import { Clock, LineChart, ListTodo, StarIcon, Users } from 'lucide-react';
 import GradientButton from '../components/ui/GradientButton';
 import { useAuth } from '@/context/AuthContext';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import JobInsights from '../components/dashboard/JobInsights';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+// Job recommendation interface
+interface JobRecommendation {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  salary: string;
+  type: string;
+  match: number;
+}
 
 const Dashboard: React.FC = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('board');
+  const [recommendations, setRecommendations] = useState<JobRecommendation[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Fetch user skills and preferences from profile to generate recommendations
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchRecommendations = async () => {
+      setLoading(true);
+      try {
+        // Get user's profile to check for skills/interests
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileError) throw profileError;
+        
+        // Generate personalized recommendations based on user data
+        // This is a simplified version that could be replaced with a real AI model
+        const userRoles = profile?.roles || [];
+        const userLocation = profile?.location || 'Remote';
+        
+        // Simple rule-based recommendations (in a real app, this would be an AI model)
+        const generatedRecommendations: JobRecommendation[] = [
+          {
+            id: '1',
+            title: userRoles.includes('Developer') ? 'Senior Developer' : 'Product Manager',
+            company: 'Google',
+            location: userLocation === 'Remote' ? 'Remote' : 'Mountain View, CA',
+            salary: '$150k-$180k',
+            type: userLocation === 'Remote' ? 'Remote' : 'Hybrid',
+            match: 95
+          },
+          {
+            id: '2',
+            title: userRoles.includes('Designer') ? 'UX/UI Designer' : 
+                   userRoles.includes('Developer') ? 'Frontend Engineer' : 'Data Analyst',
+            company: 'Amazon',
+            location: userLocation === 'Remote' ? 'Remote' : 'Seattle',
+            salary: '$130k-$160k',
+            type: userLocation === 'Remote' ? 'Remote' : 'On-site',
+            match: 88
+          },
+          {
+            id: '3',
+            title: userRoles.includes('Manager') ? 'Senior Product Manager' : 
+                   userRoles.includes('Designer') ? 'Creative Director' : 'Software Engineer',
+            company: 'Microsoft',
+            location: userLocation === 'Remote' ? 'Remote' : 'Redmond, WA',
+            salary: '$140k-$170k',
+            type: userLocation === 'Remote' ? 'Remote' : 'Hybrid',
+            match: 82
+          }
+        ];
+        
+        setRecommendations(generatedRecommendations);
+      } catch (error: any) {
+        console.error('Error fetching recommendations:', error);
+        // Fallback to default recommendations if there's an error
+        setRecommendations([
+          {
+            id: '1',
+            title: 'Senior Developer',
+            company: 'Google',
+            location: 'Remote',
+            salary: '$150k-$180k',
+            type: 'Remote',
+            match: 90
+          },
+          {
+            id: '2',
+            title: 'Product Manager',
+            company: 'Amazon',
+            location: 'Seattle',
+            salary: '$130k-$160k',
+            type: 'On-site',
+            match: 85
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchRecommendations();
+  }, [user]);
   
   return (
     <div className="flex h-screen w-full bg-gradient-light">
@@ -74,77 +176,38 @@ const Dashboard: React.FC = () => {
             </Tabs>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Recent Notifications</CardTitle>
-                <CardDescription>Stay updated with your application progress</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4 p-3 rounded-lg border hover:bg-accent/20 transition-colors">
-                    <Bell className="h-5 w-5 text-domino-mint mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Interview reminder</h4>
-                      <p className="text-sm text-muted-foreground">You have an upcoming interview with Acme Corp tomorrow at 2:00 PM</p>
-                      <div className="flex gap-2 mt-2">
-                        <Button variant="outline" size="sm">Reschedule</Button>
-                        <Button variant="default" size="sm">Prepare</Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-4 p-3 rounded-lg border hover:bg-accent/20 transition-colors">
-                    <Users className="h-5 w-5 text-domino-pink mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Application update</h4>
-                      <p className="text-sm text-muted-foreground">Microsoft has moved your application to the interview stage</p>
-                      <div className="flex gap-2 mt-2">
-                        <Button variant="outline" size="sm">View Details</Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
+          <div className="grid grid-cols-1 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Recommended Jobs</CardTitle>
-                <CardDescription>Based on your profile and preferences</CardDescription>
+                <CardTitle>AI Job Recommendations</CardTitle>
+                <CardDescription>Personalized matches based on your profile and preferences</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="p-3 rounded-lg border hover:bg-accent/20 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-medium">Senior Developer</h4>
-                      <Button variant="ghost" size="icon">
-                        <StarIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Google - Remote</p>
-                    <div className="flex gap-2 mt-2">
-                      <span className="text-xs bg-domino-pink/20 text-domino-pink px-2 py-1 rounded-full">$150k-$180k</span>
-                      <span className="text-xs bg-domino-mint/20 text-domino-mint px-2 py-1 rounded-full">Remote</span>
-                    </div>
-                    <Button className="w-full mt-3" variant="outline">Apply Now</Button>
+                {loading ? (
+                  <div className="flex justify-center py-6">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
                   </div>
-                  
-                  <div className="p-3 rounded-lg border hover:bg-accent/20 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-medium">Product Manager</h4>
-                      <Button variant="ghost" size="icon">
-                        <StarIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Amazon - Seattle</p>
-                    <div className="flex gap-2 mt-2">
-                      <span className="text-xs bg-domino-pink/20 text-domino-pink px-2 py-1 rounded-full">$130k-$160k</span>
-                      <span className="text-xs bg-domino-green/20 text-domino-green px-2 py-1 rounded-full">On-site</span>
-                    </div>
-                    <Button className="w-full mt-3" variant="outline">Apply Now</Button>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {recommendations.map(job => (
+                      <div key={job.id} className="p-3 rounded-lg border hover:bg-accent/20 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-medium">{job.title}</h4>
+                          <Button variant="ghost" size="icon">
+                            <StarIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{job.company} - {job.location}</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <span className="text-xs bg-domino-pink/20 text-domino-pink px-2 py-1 rounded-full">{job.salary}</span>
+                          <span className="text-xs bg-domino-mint/20 text-domino-mint px-2 py-1 rounded-full">{job.type}</span>
+                          <span className="text-xs bg-domino-green/20 text-domino-green px-2 py-1 rounded-full">{job.match}% Match</span>
+                        </div>
+                        <Button className="w-full mt-3" variant="outline">Apply Now</Button>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
