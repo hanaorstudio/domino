@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -25,30 +24,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const location = useLocation();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session?.user?.id);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      if (session?.user && (location.pathname === '/auth' || location.pathname === '/')) {
-        navigate('/dashboard');
-      } else if (!session?.user && location.pathname !== '/' && location.pathname !== '/auth') {
-        // Redirect to auth page if not authenticated and trying to access protected routes
-        navigate('/auth');
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error checking session:", error);
+          toast.error("Failed to check authentication status");
+          setLoading(false);
+          return;
+        }
+        
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        
+        console.log("Initial session check:", data.session?.user?.id);
+        
+        // Redirect authenticated users away from auth page
+        if (data.session?.user) {
+          if (location.pathname === '/auth' || location.pathname === '/') {
+            navigate('/dashboard');
+          }
+          
+          // Ensure profile is complete for the user
+          if (data.session.user) {
+            await ensureUserProfileComplete(data.session.user);
+          }
+        } else if (!data.session?.user && location.pathname !== '/' && location.pathname !== '/auth') {
+          // Redirect to auth page if not authenticated and trying to access protected routes
+          navigate('/auth');
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error("Error in checkSession:", err);
+        setLoading(false);
       }
-    });
-
+    };
+    
+    checkSession();
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state change event:", _event, session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
       
       if (_event === 'SIGNED_IN' && session?.user) {
         console.log("User signed in, redirecting to dashboard");
         
         if (session.user) {
+          // Make sure to update profile for the user
           await ensureUserProfileComplete(session.user);
         }
         
