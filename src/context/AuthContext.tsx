@@ -24,15 +24,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const location = useLocation();
 
   useEffect(() => {
+    console.log("AuthProvider mounted, initializing auth state");
+    
+    // Enforce a maximum loading time of 3 seconds
     const loadingTimeout = setTimeout(() => {
       if (loading) {
         console.log("Loading timeout triggered, forcing loading to false");
         setLoading(false);
       }
-    }, 5000);
+    }, 3000);
 
+    // First set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      console.log("Auth state change:", event, newSession?.user?.id || "No user");
+      
+      // Update state based on session
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      
+      // Handle specific auth events
+      if (event === 'SIGNED_IN' && newSession?.user) {
+        console.log("Signed in event detected, setting up profile if needed");
+        
+        // Use setTimeout to avoid Supabase deadlocks
+        setTimeout(() => {
+          ensureUserProfileComplete(newSession.user);
+          
+          // Only navigate if we're on the auth page or root
+          if (location.pathname === '/auth' || location.pathname === '/') {
+            navigate('/dashboard');
+          }
+        }, 0);
+      } else if (event === 'SIGNED_OUT') {
+        console.log("Signed out event detected");
+        navigate('/');
+      }
+    });
+
+    // Then check for existing session
     const checkSession = async () => {
       try {
+        console.log("Checking for existing session");
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -45,16 +77,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(data.session);
         setUser(data.session?.user ?? null);
         
-        console.log("Initial session check:", data.session?.user?.id || "No session");
-        
         if (data.session?.user) {
-          if (location.pathname === '/auth' || location.pathname === '/') {
-            navigate('/dashboard');
-          }
+          console.log("Existing session found:", data.session.user.id);
           
-          if (data.session.user) {
-            await ensureUserProfileComplete(data.session.user);
-          }
+          setTimeout(() => {
+            ensureUserProfileComplete(data.session.user);
+            
+            // Only redirect if on auth or root page
+            if (location.pathname === '/auth' || location.pathname === '/') {
+              navigate('/dashboard');
+            }
+          }, 0);
+        } else {
+          console.log("No session found");
+          // If on a protected route with no session, Auth component will handle redirect
         }
         
         setLoading(false);
@@ -66,24 +102,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     checkSession();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      console.log("Auth state change event:", _event, currentSession?.user?.id || "No user");
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      
-      if (_event === 'SIGNED_IN' && currentSession?.user) {
-        console.log("User signed in, redirecting to dashboard");
-        
-        if (currentSession.user) {
-          await ensureUserProfileComplete(currentSession.user);
-        }
-        
-        navigate('/dashboard');
-      } else if (_event === 'SIGNED_OUT') {
-        navigate('/');
-      }
-    });
-
     return () => {
       clearTimeout(loadingTimeout);
       subscription.unsubscribe();
@@ -166,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Starting Google sign in process");
       
-      const redirectUrl = 'https://dominotasks.vercel.app/auth';
+      const redirectUrl = window.location.origin + '/auth';
       console.log("Using redirect URL:", redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({

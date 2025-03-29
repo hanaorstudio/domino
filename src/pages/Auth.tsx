@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('login');
   const [formLoading, setFormLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(true);
   const navigate = useNavigate();
   
   // Login form state
@@ -24,18 +25,29 @@ const Auth: React.FC = () => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
 
-  // Don't redirect during loading state
-  if (loading) {
+  // Add local timeout to prevent infinite loading
+  useEffect(() => {
+    console.log("Auth page mounted, loading:", loading);
+    const timer = setTimeout(() => {
+      setLocalLoading(false);
+      console.log("Local loading timeout expired");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // If we have a user and loading is done, redirect to dashboard
+  if (user && !loading) {
+    console.log("Auth page: user detected, redirecting to dashboard");
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Show loading spinner only if global auth loading is true and within local timeout
+  if (loading && localLoading) {
     return (
       <div className="min-h-screen bg-gradient-light flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
-  }
-
-  // Only redirect if user is authenticated and loading is done
-  if (user && !loading) {
-    return <Navigate to="/dashboard" replace />;
   }
 
   const handleLogin = async (e: React.FormEvent) => {
