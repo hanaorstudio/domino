@@ -12,7 +12,7 @@ export const extractKeywords = (applications: any[]) => {
   
   // Get top keywords (sorted by frequency)
   return Object.entries(positionWords)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
     .slice(0, 5)
     .map(([word]) => word);
 };
