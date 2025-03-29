@@ -60,8 +60,8 @@ export const getEmotionData = async (userId: string): Promise<EmotionData[]> => 
 
     if (error) throw error;
     
-    // Map the returned data to our EmotionData interface
-    return (data || []).map(item => ({
+    // Cast the entire data array to any before mapping to avoid TypeScript errors
+    return ((data || []) as any[]).map(item => ({
       date: item.date,
       confidence: item.confidence,
       motivation: item.motivation,
