@@ -132,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Starting Google sign in process");
       
       // Use Vercel deployment URL
-      const redirectUrl = 'https://domino.vercel.app/auth';
+      const redirectUrl = 'https://dominotasks.vercel.app/auth';
       console.log("Using redirect URL:", redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({
