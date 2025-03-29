@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Navigate, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -24,18 +24,18 @@ const Auth: React.FC = () => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
 
-  // Redirect to dashboard if already logged in
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // Show loading while checking auth state
+  // Don't redirect during loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-light flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Only redirect if user is authenticated and loading is done
+  if (user && !loading) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleLogin = async (e: React.FormEvent) => {

@@ -24,6 +24,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const location = useLocation();
 
   useEffect(() => {
+    const loadingTimeout = setTimeout(() => {
+      if (loading) {
+        console.log("Loading timeout triggered, forcing loading to false");
+        setLoading(false);
+      }
+    }, 5000);
+
     const checkSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -38,21 +45,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(data.session);
         setUser(data.session?.user ?? null);
         
-        console.log("Initial session check:", data.session?.user?.id);
+        console.log("Initial session check:", data.session?.user?.id || "No session");
         
-        // Redirect authenticated users away from auth page
         if (data.session?.user) {
           if (location.pathname === '/auth' || location.pathname === '/') {
             navigate('/dashboard');
           }
           
-          // Ensure profile is complete for the user
           if (data.session.user) {
             await ensureUserProfileComplete(data.session.user);
           }
         }
         
-        // Always set loading to false regardless of session status
         setLoading(false);
       } catch (err) {
         console.error("Error in checkSession:", err);
@@ -62,27 +66,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     checkSession();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("Auth state change event:", _event, session?.user?.id);
-      setSession(session);
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      console.log("Auth state change event:", _event, currentSession?.user?.id || "No user");
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
       
-      if (_event === 'SIGNED_IN' && session?.user) {
+      if (_event === 'SIGNED_IN' && currentSession?.user) {
         console.log("User signed in, redirecting to dashboard");
         
-        if (session.user) {
-          // Make sure to update profile for the user
-          await ensureUserProfileComplete(session.user);
+        if (currentSession.user) {
+          await ensureUserProfileComplete(currentSession.user);
         }
         
         navigate('/dashboard');
       } else if (_event === 'SIGNED_OUT') {
-        // Redirect to home page on sign out
         navigate('/');
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(loadingTimeout);
+      subscription.unsubscribe();
+    };
   }, [navigate, location.pathname]);
   
   const ensureUserProfileComplete = async (user: User) => {
@@ -161,7 +166,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Starting Google sign in process");
       
-      // Use Vercel deployment URL
       const redirectUrl = 'https://dominotasks.vercel.app/auth';
       console.log("Using redirect URL:", redirectUrl);
       
@@ -170,7 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           redirectTo: redirectUrl,
           queryParams: {
-            prompt: 'select_account', // Force Google to show the account selector
+            prompt: 'select_account',
           },
           scopes: 'email profile'
         }
