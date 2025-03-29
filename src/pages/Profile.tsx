@@ -7,16 +7,15 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Mail, MapPin, Globe } from 'lucide-react';
+import { User, Mail, MapPin, Globe, BarChart } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { Profile } from '@/types/profile';
-
-const countries = [
-  'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Australia', 
-  'Japan', 'Spain', 'Italy', 'Brazil', 'India', 'Singapore'
-];
+import { getEmotionData } from '@/services/metricsService';
+import EmotionQuestionnaire from '@/components/metrics/EmotionQuestionnaire';
+import EmotionChart from '@/components/metrics/EmotionChart';
+import { COUNTRIES } from '@/utils/countries';
 
 const ProfilePage: React.FC = () => {
   const { user, session } = useAuth();
@@ -26,6 +25,8 @@ const ProfilePage: React.FC = () => {
   const [location, setLocation] = useState('Remote');
   const [country, setCountry] = useState('United States');
   const [isSaving, setIsSaving] = useState(false);
+  const [emotionData, setEmotionData] = useState<any[]>([]);
+  const [loadingEmotions, setLoadingEmotions] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -64,6 +65,24 @@ const ProfilePage: React.FC = () => {
     };
 
     fetchProfile();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchEmotionData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoadingEmotions(true);
+        const data = await getEmotionData(user.id);
+        setEmotionData(data);
+      } catch (error) {
+        console.error('Error fetching emotion data:', error);
+      } finally {
+        setLoadingEmotions(false);
+      }
+    };
+    
+    fetchEmotionData();
   }, [user]);
 
   const handleSaveProfile = async () => {
@@ -178,8 +197,8 @@ const ProfilePage: React.FC = () => {
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select country" />
                             </SelectTrigger>
-                            <SelectContent>
-                              {countries.map((c) => (
+                            <SelectContent className="max-h-[300px]">
+                              {COUNTRIES.map((c) => (
                                 <SelectItem key={c} value={c}>{c}</SelectItem>
                               ))}
                             </SelectContent>
@@ -199,8 +218,31 @@ const ProfilePage: React.FC = () => {
               )}
             </div>
             
+            <div className="glass-panel rounded-xl p-6 mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart className="h-5 w-5" />
+                <h2 className="text-xl font-semibold">Your Emotion Tracking</h2>
+              </div>
+              
+              <div className="space-y-6">
+                {emotionData.length > 0 ? (
+                  <EmotionChart data={emotionData.slice(0, 7)} />
+                ) : loadingEmotions ? (
+                  <div className="flex items-center justify-center h-40">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-6">
+                    No emotion data tracked yet. Start by filling out the questionnaire below.
+                  </p>
+                )}
+                
+                <EmotionQuestionnaire />
+              </div>
+            </div>
+            
             <div className="glass-panel rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">Account Statistics</h2>
+              <h2 className="text-xl font-semibold mb-4">Profile Statistics</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-card rounded-lg p-4 border border-border">
                   <h3 className="text-sm font-medium text-muted-foreground">Total Applications</h3>
