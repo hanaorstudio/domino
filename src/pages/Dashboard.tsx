@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -13,6 +14,7 @@ import JobInsights from '../components/dashboard/JobInsights';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import JobRecommendations from '@/components/dashboard/JobRecommendations';
+import LinkedInJobPosts from '@/components/dashboard/LinkedInJobPosts';
 import { fetchUserProfile } from '@/services/userProfile';
 import { Profile } from '@/types/profile';
 
@@ -106,6 +108,12 @@ const Dashboard: React.FC = () => {
                 userCountry={profile.country} 
               />
             )}
+            
+            {/* Add LinkedIn job posts component for top tech companies */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <LinkedInJobPosts companyUsername="microsoft" />
+              <LinkedInJobPosts companyUsername="google" />
+            </div>
           </div>
         </div>
       </div>
