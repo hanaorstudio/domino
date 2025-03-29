@@ -1,7 +1,20 @@
 
-import React from 'react';
-import { Globe } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState, useRef, useEffect } from 'react';
+import { Globe, Search, X } from 'lucide-react';
+import { 
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 // Country options for the selector
 const COUNTRIES = [
@@ -38,27 +51,50 @@ const JobCountrySelector: React.FC<JobCountrySelectorProps> = ({
   selectedCountry, 
   onCountryChange 
 }) => {
+  const [open, setOpen] = useState(false);
+  const selectedCountryName = getCountryName(selectedCountry);
+
   return (
     <div className="mb-4 flex items-center">
       <div className="flex items-center mr-2">
         <Globe className="h-4 w-4 mr-1 text-muted-foreground" />
         <span className="text-sm font-medium">Country:</span>
       </div>
-      <Select
-        value={selectedCountry}
-        onValueChange={onCountryChange}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Select country" />
-        </SelectTrigger>
-        <SelectContent>
-          {COUNTRIES.map((country) => (
-            <SelectItem key={country.value} value={country.value}>
-              {country.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            role="combobox" 
+            aria-expanded={open}
+            className="w-[200px] justify-between"
+          >
+            {selectedCountryName}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[200px] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Search country..." className="h-9" />
+            <CommandList>
+              <CommandEmpty>No country found.</CommandEmpty>
+              <CommandGroup>
+                {COUNTRIES.map((country) => (
+                  <CommandItem
+                    key={country.value}
+                    value={country.value}
+                    onSelect={(currentValue) => {
+                      onCountryChange(currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    {country.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };

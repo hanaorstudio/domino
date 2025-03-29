@@ -47,8 +47,8 @@ const JobList: React.FC<JobListProps> = ({
           ))
         ) : (
           <div className="col-span-full text-center py-12">
-            <p className="text-muted-foreground mb-2">No real job listings found matching your profile.</p>
-            <p className="text-sm text-muted-foreground mb-4">Try refreshing or adjusting your profile preferences.</p>
+            <p className="text-muted-foreground mb-2">No job listings found matching your criteria.</p>
+            <p className="text-sm text-muted-foreground mb-4">Try selecting a different country or adjusting your profile preferences.</p>
             <Button 
               variant="outline" 
               size="sm" 
