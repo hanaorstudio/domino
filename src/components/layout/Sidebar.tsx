@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   User, 
@@ -17,13 +16,12 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
@@ -44,7 +42,18 @@ const Sidebar: React.FC = () => {
   
   const bottomNavItems = [
     { icon: Settings, label: 'Settings', path: '/settings' },
-    { icon: User, label: 'Profile', path: '/profile' },
+    { 
+      icon: User, 
+      label: 'Profile', 
+      path: '/profile',
+      onClick: () => {
+        if (user) {
+          navigate('/profile');
+        } else {
+          navigate('/auth');
+        }
+      }
+    },
   ];
 
   const handleNewApplication = () => {
@@ -110,11 +119,11 @@ const Sidebar: React.FC = () => {
         
         <div className="mt-auto space-y-1 px-3 pb-4">
           {bottomNavItems.map((item) => (
-            <Link
+            <div
               key={item.path}
-              to={item.path}
+              onClick={item.onClick}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
+                "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer",
                 isActive(item.path) 
                   ? "bg-accent" 
                   : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -123,7 +132,7 @@ const Sidebar: React.FC = () => {
             >
               <item.icon size={18} />
               {!collapsed && <span>{item.label}</span>}
-            </Link>
+            </div>
           ))}
           
           <button

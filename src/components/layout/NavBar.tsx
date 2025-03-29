@@ -1,12 +1,23 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, User, Calendar, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/context/AuthContext';
 
 const NavBar: React.FC = () => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleProfileNavigation = () => {
+    if (user) {
+      navigate('/profile');
+    } else {
+      navigate('/auth');
+    }
+  };
   
   return (
     <nav className={`flex flex-col ${isMobile ? 'space-y-4' : 'sm:flex-row'} justify-between items-center py-4 px-6 glass-panel rounded-xl mb-6 animate-fade-in-down`}>
@@ -34,9 +45,14 @@ const NavBar: React.FC = () => {
           <Settings className="h-5 w-5 text-muted-foreground" />
         </Button>
         {!isMobile && <div className="w-px h-8 bg-border mx-1 hidden sm:block"></div>}
-        <Button variant="ghost" size="sm" className="gap-2 text-sm font-medium">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-2 text-sm font-medium"
+          onClick={handleProfileNavigation}
+        >
           <User className="h-4 w-4" />
-          {!isMobile && <span>Account</span>}
+          {!isMobile && <span>Profile</span>}
         </Button>
       </div>
     </nav>
