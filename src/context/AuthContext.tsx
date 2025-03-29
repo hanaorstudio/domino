@@ -47,14 +47,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (event === 'SIGNED_IN' && newSession?.user) {
         console.log("Signed in event detected, setting up profile if needed");
         
+        // Clear loading state immediately on sign in
+        setLoading(false);
+        
         // Use setTimeout to avoid Supabase deadlocks
         setTimeout(() => {
           ensureUserProfileComplete(newSession.user);
           
-          // Only navigate if we're on the auth page or root
-          if (location.pathname === '/auth' || location.pathname === '/') {
-            navigate('/dashboard');
-          }
+          // Always navigate to dashboard after successful sign in
+          // This ensures Google and Email auth flows behave the same
+          console.log("Navigating to dashboard after successful sign in");
+          navigate('/dashboard', { replace: true });
         }, 0);
       } else if (event === 'SIGNED_OUT') {
         console.log("Signed out event detected");
@@ -86,12 +89,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             
             // Only redirect if on auth or root page
             if (location.pathname === '/auth' || location.pathname === '/') {
-              navigate('/dashboard');
+              navigate('/dashboard', { replace: true });
             }
           }, 0);
         } else {
           console.log("No session found");
-          // If on a protected route with no session, Auth component will handle redirect
         }
         
         setLoading(false);
@@ -206,6 +208,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error('Error configuring Google sign-in: ' + error.message);
         throw error;
       }
+      
+      // Note: The redirect happens automatically from Supabase,
+      // so we don't need to navigate here - the onAuthStateChange event will handle
+      // the redirect to dashboard after successful sign-in
       
     } catch (error: any) {
       console.error("Complete Google sign-in exception:", error);

@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Navigate, Link, useNavigate } from 'react-router-dom';
+import { Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -15,6 +16,7 @@ const Auth: React.FC = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [localLoading, setLocalLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -34,6 +36,16 @@ const Auth: React.FC = () => {
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Log auth page navigation for debugging
+  useEffect(() => {
+    console.log("Auth page state:", { 
+      user: !!user,
+      loading,
+      pathname: location.pathname,
+      state: location.state
+    });
+  }, [user, loading, location]);
 
   // If we have a user and loading is done, redirect to dashboard
   if (user && !loading) {
@@ -55,6 +67,7 @@ const Auth: React.FC = () => {
     setFormLoading(true);
     try {
       await signIn(loginEmail, loginPassword);
+      // Navigation handled in AuthContext after successful sign-in
     } catch (error) {
       console.error(error);
     } finally {
@@ -67,6 +80,7 @@ const Auth: React.FC = () => {
     setFormLoading(true);
     try {
       await signUp(registerEmail, registerPassword, registerName);
+      toast.success("Registration successful! Please check your email.");
       setActiveTab('login');
     } catch (error) {
       console.error(error);
@@ -80,9 +94,11 @@ const Auth: React.FC = () => {
     try {
       console.log("Initiating Google sign in from Auth page");
       await googleSignIn();
+      // The redirect is handled by Supabase and then onAuthStateChange in AuthContext
     } catch (error: any) {
-      console.error(error);
+      console.error("Google sign-in error:", error);
     } finally {
+      // In case there's an error and we don't redirect
       setGoogleLoading(false);
     }
   };
