@@ -50,11 +50,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (data.session.user) {
             await ensureUserProfileComplete(data.session.user);
           }
-        } else if (!data.session?.user && location.pathname !== '/' && location.pathname !== '/auth') {
-          // Redirect to auth page if not authenticated and trying to access protected routes
-          navigate('/auth');
         }
         
+        // Always set loading to false regardless of session status
         setLoading(false);
       } catch (err) {
         console.error("Error in checkSession:", err);

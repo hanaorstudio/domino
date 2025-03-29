@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,17 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Navigate, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 const Auth: React.FC = () => {
-  const { user, signIn, signUp, googleSignIn } = useAuth();
+  const { user, signIn, signUp, googleSignIn, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('login');
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [authChecking, setAuthChecking] = useState(true);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const fromOAuth = searchParams.get('fromOAuth') === 'true';
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -29,55 +24,42 @@ const Auth: React.FC = () => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
 
-  // Check for authentication on load and OAuth redirects
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        console.log("Auth page loaded, checking session");
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Error checking session:", error);
-          toast.error("Failed to check authentication status");
-        }
-        
-        if (data.session) {
-          console.log("Session found, redirecting to dashboard");
-          navigate('/dashboard');
-        }
-        
-        setAuthChecking(false);
-      } catch (err) {
-        console.error("Exception during session check:", err);
-        setAuthChecking(false);
-      }
-    };
-    
-    checkSession();
-  }, [navigate]);
+  // Redirect to dashboard if already logged in
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-light flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     try {
       await signIn(loginEmail, loginPassword);
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     try {
       await signUp(registerEmail, registerPassword, registerName);
       setActiveTab('login');
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      setFormLoading(false);
     }
   };
 
@@ -92,20 +74,6 @@ const Auth: React.FC = () => {
       setGoogleLoading(false);
     }
   };
-
-  // Show loading indicator while checking auth
-  if (authChecking) {
-    return (
-      <div className="min-h-screen bg-gradient-light flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Redirect to dashboard if already logged in
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
@@ -192,8 +160,8 @@ const Auth: React.FC = () => {
                 </CardContent>
                 
                 <CardFooter>
-                  <Button className="w-full bg-gradient-mint-rose" type="submit" disabled={loading}>
-                    {loading ? 'Signing in...' : 'Sign in'}
+                  <Button className="w-full bg-gradient-mint-rose" type="submit" disabled={formLoading}>
+                    {formLoading ? 'Signing in...' : 'Sign in'}
                   </Button>
                 </CardFooter>
               </form>
@@ -240,8 +208,8 @@ const Auth: React.FC = () => {
                 </CardContent>
                 
                 <CardFooter>
-                  <Button className="w-full bg-gradient-green-pink" type="submit" disabled={loading}>
-                    {loading ? 'Creating account...' : 'Create account'}
+                  <Button className="w-full bg-gradient-green-pink" type="submit" disabled={formLoading}>
+                    {formLoading ? 'Creating account...' : 'Create account'}
                   </Button>
                 </CardFooter>
               </form>
