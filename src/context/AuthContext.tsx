@@ -11,7 +11,6 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
-  googleSignIn: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -171,48 +170,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   };
-  
-  const googleSignIn = async () => {
-    try {
-      console.log("Starting Google sign in process");
-      
-      const origin = window.location.origin;
-      const redirectUrl = `${origin}/auth`;
-      console.log("Using redirect URL:", redirectUrl);
-      
-      toast.info("Redirecting to Google login...");
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            prompt: 'select_account',
-            access_type: 'offline'
-          },
-          scopes: 'email profile'
-        }
-      });
-      
-      if (error) {
-        console.error("Google sign in configuration error:", error);
-        toast.error('Error configuring Google sign-in: ' + error.message);
-        throw error;
-      }
-      
-      if (data?.url) {
-        console.log("Redirect URL received:", data.url);
-        window.location.href = data.url;
-      } else {
-        console.error("No redirect URL received from Supabase");
-        toast.error("Failed to start Google authentication");
-      }
-    } catch (error: any) {
-      console.error("Complete Google sign-in exception:", error);
-      toast.error(error.message || 'Unexpected error signing in with Google');
-      throw error;
-    }
-  };
 
   const signOut = async () => {
     try {
@@ -225,7 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, googleSignIn }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

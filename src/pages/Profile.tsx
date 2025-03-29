@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Mail, Image, ExternalLink } from 'lucide-react';
+import { User, Mail } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -21,7 +21,6 @@ const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [fullName, setFullName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [authProvider, setAuthProvider] = useState<string>('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -29,10 +28,6 @@ const ProfilePage: React.FC = () => {
 
       try {
         setLoading(true);
-        
-        // Determine auth provider
-        const provider = user.app_metadata?.provider || 'email';
-        setAuthProvider(provider);
         
         const { data, error } = await supabase
           .from('profiles')
@@ -45,11 +40,6 @@ const ProfilePage: React.FC = () => {
         setProfile(data);
         setFullName(data.full_name || '');
         
-        // If this is a Google user and they don't have an avatar yet, use the one from Google
-        if (provider === 'google' && !data.avatar_url && user.user_metadata?.avatar_url) {
-          await updateProfileAvatar(user.user_metadata.avatar_url);
-        }
-        
       } catch (error: any) {
         console.error('Error fetching profile:', error);
         toast.error('Failed to load profile');
@@ -60,23 +50,6 @@ const ProfilePage: React.FC = () => {
 
     fetchProfile();
   }, [user]);
-  
-  const updateProfileAvatar = async (avatarUrl: string) => {
-    if (!user) return;
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ avatar_url: avatarUrl })
-        .eq('id', user.id);
-        
-      if (error) throw error;
-      
-      setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
-    } catch (error: any) {
-      console.error('Error updating avatar:', error);
-    }
-  };
 
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -133,12 +106,6 @@ const ProfilePage: React.FC = () => {
                     </div>
                     
                     <div className="flex-1 space-y-4">
-                      {authProvider && (
-                        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                          {authProvider === 'google' ? 'Google Account' : 'Email Login'}
-                        </div>
-                      )}
-                      
                       <div>
                         <label className="text-sm font-medium block mb-1">Email</label>
                         <div className="flex items-center gap-2 text-muted-foreground bg-background/50 border border-border rounded-md p-2">
