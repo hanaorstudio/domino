@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -71,9 +70,11 @@ const Sidebar: React.FC = () => {
     e.preventDefault();
     try {
       await signOut();
+      toast.success('Successfully signed out');
       // Navigation is handled in the AuthContext
     } catch (error) {
       console.error("Error signing out:", error);
+      toast.error('Failed to sign out. Please try again.');
     }
   };
 
