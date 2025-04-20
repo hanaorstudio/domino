@@ -24,69 +24,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const location = useLocation();
 
   useEffect(() => {
-    try {
-      // First set up auth state listener to prevent race conditions
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-        console.log("Auth state change:", event, newSession?.user?.id || "No user");
+    // First set up auth state listener to prevent race conditions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      console.log("Auth state change:", event, newSession?.user?.id || "No user");
+      
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+      
+      if (event === 'SIGNED_IN' && newSession?.user) {
+        // Use setTimeout to prevent blocking the main thread during auth state change
+        setTimeout(() => {
+          ensureUserProfileComplete(newSession.user);
+        }, 0);
         
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && newSession?.user) {
-          // Use setTimeout to prevent blocking the main thread during auth state change
-          setTimeout(() => {
-            ensureUserProfileComplete(newSession.user);
-          }, 0);
-          
-          setTimeout(() => {
-            navigate('/dashboard', { replace: true });
-          }, 0);
-        } else if (event === 'SIGNED_OUT') {
-          setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 0);
-        }
-      });
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 0);
+      } else if (event === 'SIGNED_OUT') {
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 0);
+      }
+    });
 
-      // Then check for existing session
-      const checkSession = async () => {
-        try {
-          const { data, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            console.error("Error checking session:", error);
-            setLoading(false);
-            return;
-          }
-          
-          setSession(data.session);
-          setUser(data.session?.user ?? null);
-          
-          if (data.session?.user) {
-            setTimeout(() => {
-              ensureUserProfileComplete(data.session!.user);
-              
-              if (location.pathname === '/auth' || location.pathname === '/') {
-                navigate('/dashboard', { replace: true });
-              }
-            }, 0);
-          }
-        } catch (err) {
-          console.error("Error in checkSession:", err);
-        } finally {
+    // Then check for existing session
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error checking session:", error);
           setLoading(false);
+          return;
         }
-      };
-      
-      checkSession();
-      
-      return () => {
-        subscription.unsubscribe();
-      };
-    } catch (err) {
-      console.error("Critical error in auth setup:", err);
-      setLoading(false);
-    }
+        
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        
+        if (data.session?.user) {
+          setTimeout(() => {
+            ensureUserProfileComplete(data.session!.user);
+            
+            if (location.pathname === '/auth' || location.pathname === '/') {
+              navigate('/dashboard', { replace: true });
+            }
+          }, 0);
+        }
+      } catch (err) {
+        console.error("Error in checkSession:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkSession();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate, location.pathname]);
   
   const ensureUserProfileComplete = async (user: User) => {
