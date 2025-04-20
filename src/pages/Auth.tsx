@@ -1,21 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
 
 const Auth: React.FC = () => {
   const { user, signIn, signUp, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('login');
   const [formLoading, setFormLoading] = useState(false);
   const [localLoading, setLocalLoading] = useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -28,34 +24,21 @@ const Auth: React.FC = () => {
 
   // Add local timeout to prevent infinite loading
   useEffect(() => {
-    console.log("Auth page mounted, loading:", loading);
     const timer = setTimeout(() => {
       setLocalLoading(false);
-      console.log("Local loading timeout expired");
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
-  // Log auth page navigation for debugging
-  useEffect(() => {
-    console.log("Auth page state:", { 
-      user: !!user,
-      loading,
-      pathname: location.pathname,
-      state: location.state
-    });
-  }, [user, loading, location]);
-
   // If we have a user and loading is done, redirect to dashboard
   if (user && !loading) {
-    console.log("Auth page: user detected, redirecting to dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 
   // Show loading spinner only if global auth loading is true and within local timeout
   if (loading && localLoading) {
     return (
-      <div className="min-h-screen bg-gradient-light flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
@@ -66,7 +49,7 @@ const Auth: React.FC = () => {
     setFormLoading(true);
     try {
       await signIn(loginEmail, loginPassword);
-      // Navigation handled in AuthContext after successful sign-in
+      // Navigation handled in AuthContext
     } catch (error) {
       console.error(error);
     } finally {
@@ -79,7 +62,8 @@ const Auth: React.FC = () => {
     setFormLoading(true);
     try {
       await signUp(registerEmail, registerPassword, registerName);
-      toast.success("Registration successful! Please check your email.");
+      // If signup immediately logs in, navigation is handled by AuthContext
+      // Otherwise, we switch to login tab
       setActiveTab('login');
     } catch (error) {
       console.error(error);
@@ -89,34 +73,34 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-light flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground mb-4 hover:text-foreground transition-colors">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-md space-y-4">
+        <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft size={16} />
           Back to home
         </Link>
         
-        <Card>
-          <CardHeader>
+        <Card className="w-full">
+          <CardHeader className="space-y-1">
             <div className="flex items-center mb-2">
               <div className="flex flex-col">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-r from-domino-green to-domino-rose"></div>
                 <span className="text-lg font-semibold tracking-tight">Domino</span>
               </div>
             </div>
-            <CardTitle>Welcome</CardTitle>
+            <CardTitle className="text-2xl">Welcome</CardTitle>
             <CardDescription>Sign in to your account or create a new one</CardDescription>
           </CardHeader>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mx-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
             
             <TabsContent value="login">
               <form onSubmit={handleLogin}>
-                <CardContent className="space-y-4 pt-4">
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <label htmlFor="email" className="text-sm font-medium">Email</label>
                     <Input 
@@ -126,6 +110,8 @@ const Auth: React.FC = () => {
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required
+                      disabled={formLoading}
+                      className="w-full"
                     />
                   </div>
                   
@@ -138,21 +124,31 @@ const Auth: React.FC = () => {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
+                      disabled={formLoading}
+                      className="w-full"
                     />
                   </div>
                 </CardContent>
                 
                 <CardFooter>
-                  <Button className="w-full bg-gradient-mint-rose" type="submit" disabled={formLoading}>
+                  <Button 
+                    className="w-full bg-gradient-mint-rose" 
+                    type="submit" 
+                    disabled={formLoading}
+                  >
                     {formLoading ? 'Signing in...' : 'Sign in'}
                   </Button>
                 </CardFooter>
               </form>
+              
+              <div className="text-center text-sm text-muted-foreground mt-4 mb-2">
+                Demo account: demo@example.com / password123
+              </div>
             </TabsContent>
             
             <TabsContent value="register">
               <form onSubmit={handleRegister}>
-                <CardContent className="space-y-4 pt-4">
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <label htmlFor="fullName" className="text-sm font-medium">Full Name</label>
                     <Input 
@@ -162,6 +158,8 @@ const Auth: React.FC = () => {
                       value={registerName}
                       onChange={(e) => setRegisterName(e.target.value)}
                       required
+                      disabled={formLoading}
+                      className="w-full"
                     />
                   </div>
                   
@@ -174,6 +172,8 @@ const Auth: React.FC = () => {
                       value={registerEmail}
                       onChange={(e) => setRegisterEmail(e.target.value)}
                       required
+                      disabled={formLoading}
+                      className="w-full"
                     />
                   </div>
                   
@@ -186,12 +186,18 @@ const Auth: React.FC = () => {
                       value={registerPassword}
                       onChange={(e) => setRegisterPassword(e.target.value)}
                       required
+                      disabled={formLoading}
+                      className="w-full"
                     />
                   </div>
                 </CardContent>
                 
                 <CardFooter>
-                  <Button className="w-full bg-gradient-green-pink" type="submit" disabled={formLoading}>
+                  <Button 
+                    className="w-full bg-gradient-green-pink" 
+                    type="submit" 
+                    disabled={formLoading}
+                  >
                     {formLoading ? 'Creating account...' : 'Create account'}
                   </Button>
                 </CardFooter>
