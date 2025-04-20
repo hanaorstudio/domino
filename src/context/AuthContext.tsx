@@ -163,40 +163,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const formattedEmail = email.trim().toLowerCase();
       console.log("Signing up with email:", formattedEmail);
       
-      const { error, data } = await supabase.auth.signUp({ 
+      // First, sign up the user
+      const { error: signUpError, data } = await supabase.auth.signUp({ 
         email: formattedEmail, 
         password,
         options: {
-          data: {
-            full_name: fullName,
-          },
-          // Skip email verification for development
-          emailRedirectTo: window.location.origin + '/auth'
+          data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/auth`,
         }
       });
       
-      if (error) {
-        console.error("Sign up error:", error.message);
-        toast.error(error.message || 'Error signing up');
-        throw error;
+      if (signUpError) {
+        console.error("Sign up error:", signUpError.message);
+        toast.error(signUpError.message || 'Error signing up');
+        throw signUpError;
       }
       
       console.log("Sign up response:", data);
       
-      // For development, auto sign in after signup
-      if (data?.user) {
-        if (!data.session) {
-          toast.info('Registration successful. Try logging in now.');
-        } else {
-          toast.success('Registration successful. You are now signed in.');
+      if (!data.session) {
+        // If we don't have a session yet, immediately sign in - skip email verification
+        console.log("No session after signup, attempting immediate sign in");
+        
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: formattedEmail,
+          password
+        });
+        
+        if (signInError) {
+          console.error("Auto sign-in after signup error:", signInError.message);
+          toast.info('Account created! Please sign in with your credentials.');
+          throw signInError;
         }
-        // Adding a slight delay to allow profile creation
-        setTimeout(() => {
-          if (data.session) {
-            navigate('/dashboard', { replace: true });
-          }
-        }, 500);
       }
+      
+      toast.success('Registration successful! You are now signed in.');
+      
+      // Adding a slight delay to allow profile creation
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 500);
     } catch (error: any) {
       console.error("Sign up catch error:", error.message || error);
       toast.error(error.message || 'Error signing up');

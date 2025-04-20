@@ -17,7 +17,9 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       storage: typeof window !== 'undefined' ? localStorage : undefined,
-      flowType: 'implicit' // Set flow type to implicit to skip email verification
+      flowType: 'pkce', // Changed to pkce flow which can work without email verification
+      // Disable redirects since we're handling everything in the app
+      redirectTo: window.location.origin,
     }
   }
 );
