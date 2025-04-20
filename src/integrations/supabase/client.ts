@@ -17,9 +17,7 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       storage: typeof window !== 'undefined' ? localStorage : undefined,
-      flowType: 'pkce', // Changed to pkce flow which can work without email verification
-      // Disable redirects since we're handling everything in the app
-      redirectTo: window.location.origin,
+      flowType: 'pkce',
     }
   }
 );

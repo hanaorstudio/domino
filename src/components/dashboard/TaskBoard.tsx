@@ -77,6 +77,7 @@ const TaskBoard: React.FC = () => {
 
   const refreshApplications = async () => {
     const applications = await fetchJobApplications();
+    // Type assertion here to avoid type errors
     setColumns(processApplications(applications as JobApplication[]));
   };
 

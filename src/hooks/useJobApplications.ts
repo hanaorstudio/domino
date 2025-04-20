@@ -39,8 +39,8 @@ export function useJobApplications() {
     try {
       const { error } = await supabase
         .from('job_applications')
-        .update({ status: newStatus } as Partial<JobApplication>)
-        .eq('id', taskId as string);
+        .update({ status: newStatus })
+        .eq('id', taskId);
         
       if (error) {
         throw error;

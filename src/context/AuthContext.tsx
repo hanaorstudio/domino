@@ -112,13 +112,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const { error: insertError } = await supabase
         .from('profiles')
-        .insert([
-          { 
-            id: user.id, 
-            full_name: fullName,
-            avatar_url: avatarUrl
-          }
-        ]);
+        .insert({
+          id: user.id, 
+          full_name: fullName,
+          avatar_url: avatarUrl
+        });
         
       if (insertError) {
         console.error("Error creating user profile:", insertError);
@@ -217,9 +215,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      navigate('/');
+      
+      // Force navigation after sign out
+      navigate('/', { replace: true });
+      toast.success('Successfully signed out');
     } catch (error: any) {
       toast.error(error.message || 'Error signing out');
+      console.error("Sign out error:", error);
     } finally {
       setLoading(false);
     }

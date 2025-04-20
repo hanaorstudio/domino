@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -64,6 +65,16 @@ const Sidebar: React.FC = () => {
       window.dispatchEvent(new CustomEvent('open-new-task-form'));
       toast.info("Create a new job application");
     }, 100);
+  };
+
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      await signOut();
+      // Navigation is handled in the AuthContext
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (
@@ -136,7 +147,7 @@ const Sidebar: React.FC = () => {
           ))}
           
           <button
-            onClick={() => signOut()}
+            onClick={handleSignOut}
             className={cn(
               "flex items-center gap-3 px-3 py-2 w-full rounded-lg transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-foreground",
               collapsed && "justify-center px-0"
