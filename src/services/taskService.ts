@@ -1,21 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
 export type TaskStatus = 'applied' | 'interview' | 'offer' | 'rejected';
 export type TaskPriority = 'low' | 'medium' | 'high';
 
-export interface JobApplication {
-  id: string;
-  user_id: string;
-  company: string;
-  position: string;
-  status: string;
-  applied_date: string;
-  notes?: string;
-  url?: string;
-  created_at: string;
-  updated_at: string;
-}
+export type JobApplication = Database['public']['Tables']['job_applications']['Row'];
 
 export async function getJobApplications() {
   const { data, error } = await supabase
@@ -28,10 +18,12 @@ export async function getJobApplications() {
     throw error;
   }
 
-  return data;
+  return data as JobApplication[];
 }
 
-export async function addJobApplication(jobApplication: Omit<JobApplication, 'id' | 'created_at' | 'updated_at'>) {
+export async function addJobApplication(
+  jobApplication: Omit<Database['public']['Tables']['job_applications']['Insert'], 'id' | 'created_at' | 'updated_at'>
+) {
   const { data: user } = await supabase.auth.getUser();
   if (!user.user) {
     throw new Error('User not authenticated');

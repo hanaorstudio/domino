@@ -5,6 +5,13 @@ import GradientButton from '../ui/GradientButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { Database } from '@/integrations/supabase/types';
+
+type JobApplicationStat = {
+  id: string;
+  status: string;
+  applied_date: string;
+};
 
 const StatsCard: React.FC<{
   title: string;
@@ -46,10 +53,13 @@ const Stats: React.FC = () => {
         }
 
         if (data) {
+          // Cast data to the appropriate type
+          const applications = data as JobApplicationStat[];
+          
           // Calculate stats
-          const totalApplications = data.length;
-          const interviews = data.filter(app => app.status === 'interview').length;
-          const offers = data.filter(app => app.status === 'offer').length;
+          const totalApplications = applications.length;
+          const interviews = applications.filter(app => app.status === 'interview').length;
+          const offers = applications.filter(app => app.status === 'offer').length;
           
           // Calculating response rate (interviews + offers) / total
           let responseRate = 0;
@@ -62,7 +72,7 @@ const Stats: React.FC = () => {
           lastMonth.setMonth(lastMonth.getMonth() - 1);
           
           const currentMonth = new Date();
-          const applicationsLastMonth = data.filter(app => 
+          const applicationsLastMonth = applications.filter(app => 
             new Date(app.applied_date) < currentMonth && 
             new Date(app.applied_date) >= lastMonth
           ).length;

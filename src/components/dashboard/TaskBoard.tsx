@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import BoardColumn from './BoardColumn';
 import type { Task } from './BoardColumn';
@@ -6,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import NewApplicationForm from './NewApplicationForm';
 import { deleteJobApplication } from '@/services/taskService';
+import { Database } from '@/integrations/supabase/types';
 
 interface JobApplication {
   id: string;
@@ -46,10 +48,17 @@ const TaskBoard: React.FC = () => {
       }
 
       if (data) {
-        const applicationsByStatus = data.reduce((acc: Record<string, Task[]>, job: JobApplication) => {
+        // Type-safe approach: Explicitly cast the data and handle each application
+        const applications = data as Database['public']['Tables']['job_applications']['Row'][];
+        
+        // Create a record to group tasks by status
+        const applicationsByStatus: Record<string, Task[]> = {};
+        
+        // Process each application
+        applications.forEach(job => {
           const status = job.status.toLowerCase();
-          if (!acc[status]) {
-            acc[status] = [];
+          if (!applicationsByStatus[status]) {
+            applicationsByStatus[status] = [];
           }
           
           const appliedDate = new Date(job.applied_date);
@@ -62,7 +71,7 @@ const TaskBoard: React.FC = () => {
             priority = 'low';
           }
           
-          acc[status].push({
+          applicationsByStatus[status].push({
             id: job.id,
             title: job.position,
             company: job.company,
@@ -72,9 +81,7 @@ const TaskBoard: React.FC = () => {
                    job.notes?.includes('Hybrid') ? 'Hybrid' : 
                    job.notes?.includes('On-site') ? 'On-site' : undefined
           });
-          
-          return acc;
-        }, {});
+        });
         
         const newColumns = [
           {

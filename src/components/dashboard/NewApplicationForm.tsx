@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from '@/lib/utils';
+import { Database } from '@/integrations/supabase/types';
 
 interface NewApplicationFormProps {
   status: string;
@@ -47,16 +48,20 @@ const NewApplicationForm: React.FC<NewApplicationFormProps> = ({ status, onClose
     setLoading(true);
     
     try {
-      // Using the proper insert structure without explicit user_id field
-      // Supabase will automatically link this to profiles via RLS
-      const { error } = await supabase.from('job_applications').insert({
+      // Define the job application data with types that match the database schema
+      const applicationData: Database['public']['Tables']['job_applications']['Insert'] = {
         company,
         position,
         status,
         notes,
         url,
-        applied_date: date?.toISOString() || new Date().toISOString()
-      });
+        applied_date: date?.toISOString() || new Date().toISOString(),
+        user_id: user.id
+      };
+      
+      const { error } = await supabase
+        .from('job_applications')
+        .insert(applicationData);
       
       if (error) throw error;
       
