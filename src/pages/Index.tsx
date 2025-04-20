@@ -44,7 +44,7 @@ const Index: React.FC = () => {
               Organize your job search like a <span className="bg-clip-text text-transparent bg-gradient-green-pink">professional</span>
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-lg">
-              Track applications, prepare for interviews, and land your dream job with our seamless job management platform.
+              Track applications, and land your dream job with our seamless job management platform.
             </p>
             
             <div>
