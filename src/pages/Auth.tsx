@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -89,9 +88,7 @@ const Auth: React.FC = () => {
   const handleAnonymousLogin = async () => {
     setFormLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithSSO({
-        provider: 'anonymous'
-      });
+      const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
     } catch (error: any) {
       setErrorMessage(error.message || 'Failed to sign in anonymously');
