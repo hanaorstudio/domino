@@ -24,6 +24,13 @@ const Dashboard: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   
+  // Function to extract first name
+  const getFirstName = (fullName: string | null) => {
+    if (!fullName) return 'User';
+    const firstName = fullName.split(' ')[0];
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  };
+
   useEffect(() => {
     if (!user) return;
     
@@ -52,7 +59,9 @@ const Dashboard: React.FC = () => {
           <NavBar />
           
           <div className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight">Welcome back, {user?.user_metadata?.name || 'User'}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Welcome back, {getFirstName(user?.user_metadata?.full_name || profile?.full_name || user?.email)}
+            </h1>
             <p className="text-muted-foreground">Track and manage your job applications all in one place.</p>
           </div>
           
