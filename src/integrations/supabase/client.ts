@@ -16,7 +16,8 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? localStorage : undefined
+      storage: typeof window !== 'undefined' ? localStorage : undefined,
+      flowType: 'implicit' // Set flow type to implicit to skip email verification
     }
   }
 );

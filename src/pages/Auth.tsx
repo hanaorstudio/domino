@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Navigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Auth: React.FC = () => {
   const { user, signIn, signUp, loading: authLoading } = useAuth();
@@ -54,6 +55,7 @@ const Auth: React.FC = () => {
     setErrorMessage('');
     
     try {
+      console.log(`Attempting login with: ${loginEmail}`);
       await signIn(loginEmail, loginPassword);
       // Navigation handled in AuthContext
     } catch (error: any) {
@@ -71,6 +73,7 @@ const Auth: React.FC = () => {
     setErrorMessage('');
     
     try {
+      console.log(`Attempting registration with: ${registerEmail}`);
       await signUp(registerEmail, registerPassword, registerName);
       // If signup immediately logs in, navigation is handled by AuthContext
       // Otherwise, we switch to login tab
@@ -116,6 +119,15 @@ const Auth: React.FC = () => {
             <CardTitle className="text-2xl">Welcome</CardTitle>
             <CardDescription>Sign in to your account or create a new one</CardDescription>
           </CardHeader>
+          
+          {/* Alert for development notice */}
+          <div className="px-6">
+            <Alert className="mb-4 border-yellow-300 bg-yellow-50">
+              <AlertDescription className="text-sm text-yellow-800">
+                <strong>Development Mode:</strong> Email verification is disabled. You can register and login immediately.
+              </AlertDescription>
+            </Alert>
+          </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -223,6 +235,7 @@ const Auth: React.FC = () => {
                       required
                       disabled={formLoading}
                       className="w-full"
+                      minLength={6}
                     />
                   </div>
                 </CardContent>
