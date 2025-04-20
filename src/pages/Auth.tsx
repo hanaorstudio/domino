@@ -25,7 +25,7 @@ const Auth: React.FC = () => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
 
-  // Add local timeout to prevent infinite loading
+  // Effect for local loading timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setLocalLoading(false);
@@ -33,12 +33,11 @@ const Auth: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // If we have a user and loading is done, redirect to dashboard
+  // Check for user and handle loading state
   if (user && !authLoading) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Show loading spinner only if global auth loading is true and within local timeout
   if (authLoading && localLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -85,14 +84,17 @@ const Auth: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setLoginEmail('demo@example.com');
-    setLoginPassword('password123');
+  const handleAnonymousLogin = async () => {
+    setFormLoading(true);
     try {
-      setFormLoading(true);
-      await signIn('demo@example.com', 'password123');
-    } catch (error) {
-      console.error('Demo login error:', error);
+      const { error } = await supabase.auth.signInWithSSO({
+        provider: 'anonymous'
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to sign in anonymously');
+      setShowError(true);
+      console.error('Anonymous login error:', error);
     } finally {
       setFormLoading(false);
     }
@@ -169,17 +171,13 @@ const Auth: React.FC = () => {
                     type="button"
                     variant="outline" 
                     className="w-full" 
-                    onClick={handleDemoLogin}
+                    onClick={handleAnonymousLogin}
                     disabled={formLoading}
                   >
-                    Use demo account
+                    Continue as guest
                   </Button>
                 </CardFooter>
               </form>
-              
-              <div className="text-center text-sm text-muted-foreground mt-4 mb-2">
-                Demo account: demo@example.com / password123
-              </div>
             </TabsContent>
             
             <TabsContent value="register">
