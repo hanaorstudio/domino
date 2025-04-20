@@ -24,60 +24,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const location = useLocation();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log("Auth state change:", event, newSession?.user?.id || "No user");
-      
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      
-      if (event === 'SIGNED_IN' && newSession?.user) {
-        // Don't use await in the onAuthStateChange callback
-        // Use setTimeout to defer profile checks and navigation
-        setTimeout(() => {
-          ensureUserProfileComplete(newSession.user);
-          navigate('/dashboard', { replace: true });
-        }, 0);
-      } else if (event === 'SIGNED_OUT') {
-        navigate('/', { replace: true });
-      }
-    });
-
-    // THEN check for existing session
-    const checkSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
+    try {
+      // First set up auth state listener to prevent race conditions
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+        console.log("Auth state change:", event, newSession?.user?.id || "No user");
         
-        if (error) {
-          console.error("Error checking session:", error);
-          setLoading(false);
-          return;
-        }
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
         
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
-        
-        if (data.session?.user) {
+        if (event === 'SIGNED_IN' && newSession?.user) {
+          // Use setTimeout to prevent blocking the main thread during auth state change
           setTimeout(() => {
-            ensureUserProfileComplete(data.session!.user);
-            
-            if (location.pathname === '/auth' || location.pathname === '/') {
-              navigate('/dashboard', { replace: true });
-            }
+            ensureUserProfileComplete(newSession.user);
+          }, 0);
+          
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true });
+          }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          setTimeout(() => {
+            navigate('/', { replace: true });
           }, 0);
         }
-      } catch (err) {
-        console.error("Error in checkSession:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    checkSession();
-    
-    return () => {
-      subscription.unsubscribe();
-    };
+      });
+
+      // Then check for existing session
+      const checkSession = async () => {
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error("Error checking session:", error);
+            setLoading(false);
+            return;
+          }
+          
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
+          
+          if (data.session?.user) {
+            setTimeout(() => {
+              ensureUserProfileComplete(data.session!.user);
+              
+              if (location.pathname === '/auth' || location.pathname === '/') {
+                navigate('/dashboard', { replace: true });
+              }
+            }, 0);
+          }
+        } catch (err) {
+          console.error("Error in checkSession:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      checkSession();
+      
+      return () => {
+        subscription.unsubscribe();
+      };
+    } catch (err) {
+      console.error("Critical error in auth setup:", err);
+      setLoading(false);
+    }
   }, [navigate, location.pathname]);
   
   const ensureUserProfileComplete = async (user: User) => {
@@ -86,9 +95,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
         
-      if (fetchError && fetchError.code !== 'PGRST116') {
+      if (fetchError) {
         console.error("Error fetching user profile:", fetchError);
         return;
       }
@@ -121,22 +130,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email: email.trim().toLowerCase(), 
+        password 
+      });
+      
       if (error) {
+        console.error("Sign in error:", error.message);
         toast.error(error.message || 'Error signing in');
         throw error;
       }
+      
       toast.success('Successfully signed in');
     } catch (error: any) {
+      console.error("Sign in catch error:", error.message || error);
       toast.error(error.message || 'Error signing in');
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      setLoading(true);
       const { error, data } = await supabase.auth.signUp({ 
-        email, 
+        email: email.trim().toLowerCase(), 
         password,
         options: {
           data: {
@@ -146,6 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) {
+        console.error("Sign up error:", error.message);
         toast.error(error.message || 'Error signing up');
         throw error;
       }
@@ -157,18 +178,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.success('Registration successful. You are now signed in.');
       }
     } catch (error: any) {
+      console.error("Sign up catch error:", error.message || error);
       toast.error(error.message || 'Error signing up');
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Error signing out');
+    } finally {
+      setLoading(false);
     }
   };
 

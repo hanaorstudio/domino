@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,10 +17,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLoading(false);
+      
+      // If still loading after timeout, show a helpful message
+      if (loading) {
+        toast.info("Authentication is taking longer than expected. Redirecting to login page...");
+      }
     }, 1500); // Max 1.5 seconds of loading
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [loading]);
   
   // Show loading spinner only if auth is still loading and within local timeout
   if (loading && showLoading) {

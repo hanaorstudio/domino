@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,12 +7,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Navigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const Auth: React.FC = () => {
-  const { user, signIn, signUp, loading } = useAuth();
+  const { user, signIn, signUp, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('login');
   const [formLoading, setFormLoading] = useState(false);
   const [localLoading, setLocalLoading] = useState(true);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -31,12 +35,12 @@ const Auth: React.FC = () => {
   }, []);
 
   // If we have a user and loading is done, redirect to dashboard
-  if (user && !loading) {
+  if (user && !authLoading) {
     return <Navigate to="/dashboard" replace />;
   }
 
   // Show loading spinner only if global auth loading is true and within local timeout
-  if (loading && localLoading) {
+  if (authLoading && localLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -47,11 +51,15 @@ const Auth: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
+    setErrorMessage('');
+    
     try {
       await signIn(loginEmail, loginPassword);
       // Navigation handled in AuthContext
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to login. Please check your credentials and try again.');
+      setShowError(true);
+      console.error('Login error:', error);
     } finally {
       setFormLoading(false);
     }
@@ -60,13 +68,30 @@ const Auth: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
+    setErrorMessage('');
+    
     try {
       await signUp(registerEmail, registerPassword, registerName);
       // If signup immediately logs in, navigation is handled by AuthContext
       // Otherwise, we switch to login tab
       setActiveTab('login');
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to create account. Please try again.');
+      setShowError(true);
+      console.error('Registration error:', error);
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setLoginEmail('demo@example.com');
+    setLoginPassword('password123');
+    try {
+      setFormLoading(true);
+      await signIn('demo@example.com', 'password123');
     } catch (error) {
-      console.error(error);
+      console.error('Demo login error:', error);
     } finally {
       setFormLoading(false);
     }
@@ -130,13 +155,23 @@ const Auth: React.FC = () => {
                   </div>
                 </CardContent>
                 
-                <CardFooter>
+                <CardFooter className="flex flex-col space-y-2">
                   <Button 
                     className="w-full bg-gradient-mint-rose" 
                     type="submit" 
                     disabled={formLoading}
                   >
                     {formLoading ? 'Signing in...' : 'Sign in'}
+                  </Button>
+                  
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={handleDemoLogin}
+                    disabled={formLoading}
+                  >
+                    Use demo account
                   </Button>
                 </CardFooter>
               </form>
@@ -206,6 +241,19 @@ const Auth: React.FC = () => {
           </Tabs>
         </Card>
       </div>
+      
+      {/* Error Dialog */}
+      <Dialog open={showError} onOpenChange={setShowError}>
+        <DialogContent>
+          <DialogTitle>Authentication Error</DialogTitle>
+          <DialogDescription>
+            {errorMessage || "There was a problem with your login attempt. Please check your credentials and try again."}
+          </DialogDescription>
+          <div className="flex justify-end mt-4">
+            <Button onClick={() => setShowError(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
