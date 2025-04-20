@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -16,6 +15,7 @@ import { getEmotionData } from '@/services/metricsService';
 import EmotionQuestionnaire from '@/components/metrics/EmotionQuestionnaire';
 import EmotionChart from '@/components/metrics/EmotionChart';
 import { COUNTRIES } from '@/utils/countries';
+import { fetchUserProfile } from '@/services/userProfile';
 
 const ProfilePage: React.FC = () => {
   const { user, session } = useAuth();
@@ -28,14 +28,6 @@ const ProfilePage: React.FC = () => {
   const [emotionData, setEmotionData] = useState<any[]>([]);
   const [loadingEmotions, setLoadingEmotions] = useState(false);
 
-  const form = useForm({
-    defaultValues: {
-      fullName: '',
-      location: 'Remote',
-      country: 'United States'
-    }
-  });
-
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
@@ -43,19 +35,16 @@ const ProfilePage: React.FC = () => {
       try {
         setLoading(true);
         
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (error) throw error;
+        const profileData = await fetchUserProfile(user.id);
         
-        setProfile(data);
-        setFullName(data.full_name || '');
-        setLocation(data.location || 'Remote');
-        setCountry(data.country || 'United States');
-        
+        if (profileData) {
+          setProfile(profileData);
+          setFullName(profileData.full_name || '');
+          setLocation(profileData.location || 'Remote');
+          setCountry(profileData.country || 'United States');
+        } else {
+          toast.error('Failed to load profile');
+        }
       } catch (error: any) {
         console.error('Error fetching profile:', error);
         toast.error('Failed to load profile');
@@ -90,6 +79,7 @@ const ProfilePage: React.FC = () => {
 
     try {
       setIsSaving(true);
+      console.log('Updating profile with data:', { fullName, location, country });
       
       const { error } = await supabase
         .from('profiles')
@@ -100,7 +90,10 @@ const ProfilePage: React.FC = () => {
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile update error:', error);
+        throw error;
+      }
       
       toast.success('Profile updated successfully');
       setProfile(prev => prev ? { 

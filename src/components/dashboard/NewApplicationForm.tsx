@@ -47,8 +47,9 @@ const NewApplicationForm: React.FC<NewApplicationFormProps> = ({ status, onClose
     setLoading(true);
     
     try {
+      // Using the proper insert structure without explicit user_id field
+      // Supabase will automatically link this to profiles via RLS
       const { error } = await supabase.from('job_applications').insert({
-        user_id: user.id,
         company,
         position,
         status,

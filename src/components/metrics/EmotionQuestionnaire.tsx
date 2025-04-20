@@ -62,6 +62,7 @@ const EmotionQuestionnaire: React.FC = () => {
     try {
       setIsSubmitting(true);
       
+      console.log('Saving emotion data for user:', user.id);
       const emotionData: EmotionData = {
         date: new Date().toISOString(),
         confidence: emotionValues.confidence,
@@ -70,9 +71,11 @@ const EmotionQuestionnaire: React.FC = () => {
         satisfaction: emotionValues.satisfaction
       };
       
+      console.log('Emotion data to save:', emotionData);
       const success = await saveEmotionData(user.id, emotionData);
       
       if (success) {
+        toast.success("Your responses have been saved successfully");
         // Reset to default values
         setEmotionValues({
           confidence: 5,
@@ -80,6 +83,8 @@ const EmotionQuestionnaire: React.FC = () => {
           stress: 5,
           satisfaction: 5
         });
+      } else {
+        toast.error("Failed to save your responses");
       }
     } catch (error) {
       console.error('Error submitting emotion data:', error);
