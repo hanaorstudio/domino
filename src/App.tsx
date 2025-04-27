@@ -70,8 +70,12 @@ const PageTracking = () => {
             timestamp: new Date().toISOString()
           });
           
-          // Debug current Mixpanel state
-          analytics.debugState();
+          // Safely debug current Mixpanel state
+          try {
+            analytics.debugState();
+          } catch (err) {
+            console.error("Debug state error:", err);
+          }
         } catch (error) {
           console.error("Error tracking page view:", error);
         }

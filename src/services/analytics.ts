@@ -1,3 +1,4 @@
+
 import mixpanel from 'mixpanel-browser';
 import type { User } from '@supabase/supabase-js';
 
@@ -143,10 +144,20 @@ export const analytics = {
     }
     
     try {
-      // @ts-ignore - Accessing internal mixpanel state for debugging
-      const distinctId = mixpanel.get_distinct_id();
-      // @ts-ignore - Accessing internal mixpanel state for debugging
-      const superProps = mixpanel._.config.superProperties;
+      // Safe way to access Mixpanel state for debugging
+      const distinctId = mixpanel.get_distinct_id ? mixpanel.get_distinct_id() : 'unknown';
+      
+      // Safely check if config exists before accessing properties
+      let superProps = {};
+      try {
+        // @ts-ignore - Access mixpanel internal state safely
+        if (mixpanel && mixpanel._ && mixpanel._.config && mixpanel._.config.superProperties) {
+          // @ts-ignore
+          superProps = mixpanel._.config.superProperties;
+        }
+      } catch (err) {
+        superProps = { error: 'Could not access super properties' };
+      }
       
       console.log('Current Mixpanel State:', {
         distinct_id: distinctId,
