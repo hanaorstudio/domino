@@ -23,13 +23,25 @@ export const analytics = {
         debug: import.meta.env.DEV,
         track_pageview: true,
         persistence: 'localStorage',
-        ip: false // Disable IP tracking to prevent some initialization issues
+        ip: false, // Disable IP tracking for better compatibility
+        ignore_dnt: true, // Ignore Do Not Track for development purposes
+        batch_requests: true, // Use batch requests for better performance
+        batch_flush_interval_ms: 5000 // Flush batch requests every 5 seconds
       });
       isInitialized = true;
-      console.log('Analytics initialized');
+      console.log('Analytics initialized successfully');
     } catch (error) {
       console.error('Failed to initialize analytics:', error);
+      // Set isInitialized to false so we can try again later
+      isInitialized = false;
     }
+  },
+
+  /**
+   * Check if analytics is initialized
+   */
+  isInitialized() {
+    return isInitialized;
   },
 
   /**

@@ -27,26 +27,44 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize analytics outside of component to ensure it happens only once
-analytics.init();
+// Initialize analytics outside of React components
+// This ensures it only happens once during app startup
+try {
+  analytics.init();
+} catch (error) {
+  console.error("Failed to initialize analytics during app startup:", error);
+}
 
 // Page tracking component
 const PageTracking = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Small delay to ensure analytics is initialized properly
+    // Using a longer delay to ensure analytics is fully initialized
     const timer = setTimeout(() => {
-      try {
-        const pageName = location.pathname === '/' ? 'Home' : 
-                        location.pathname.charAt(1).toUpperCase() + 
-                        location.pathname.slice(2).replace(/-/g, ' ');
-                        
-        analytics.trackPageView(pageName, { path: location.pathname });
-      } catch (error) {
-        console.error("Error tracking page view:", error);
+      if (!analytics.isInitialized()) {
+        // If not initialized, try initializing again
+        try {
+          analytics.init();
+        } catch (error) {
+          console.error("Error reinitializing analytics:", error);
+          return;
+        }
       }
-    }, 100);
+      
+      // Only track page view if initialization is successful
+      if (analytics.isInitialized()) {
+        try {
+          const pageName = location.pathname === '/' ? 'Home' : 
+                          location.pathname.charAt(1).toUpperCase() + 
+                          location.pathname.slice(2).replace(/-/g, ' ');
+                          
+          analytics.trackPageView(pageName, { path: location.pathname });
+        } catch (error) {
+          console.error("Error tracking page view:", error);
+        }
+      }
+    }, 500); // Increased delay to 500ms
     
     return () => clearTimeout(timer);
   }, [location]);
