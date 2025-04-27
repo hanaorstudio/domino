@@ -35,15 +35,20 @@ const PageTracking = () => {
   const location = useLocation();
   
   useEffect(() => {
-    try {
-      const pageName = location.pathname === '/' ? 'Home' : 
-                       location.pathname.charAt(1).toUpperCase() + 
-                       location.pathname.slice(2).replace(/-/g, ' ');
-                       
-      analytics.trackPageView(pageName, { path: location.pathname });
-    } catch (error) {
-      console.error("Error tracking page view:", error);
-    }
+    // Small delay to ensure analytics is initialized properly
+    const timer = setTimeout(() => {
+      try {
+        const pageName = location.pathname === '/' ? 'Home' : 
+                        location.pathname.charAt(1).toUpperCase() + 
+                        location.pathname.slice(2).replace(/-/g, ' ');
+                        
+        analytics.trackPageView(pageName, { path: location.pathname });
+      } catch (error) {
+        console.error("Error tracking page view:", error);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [location]);
   
   return null;

@@ -1,3 +1,4 @@
+
 import mixpanel from 'mixpanel-browser';
 import type { User } from '@supabase/supabase-js';
 
@@ -15,11 +16,14 @@ export const analytics = {
    * Initialize the analytics service
    */
   init() {
+    if (isInitialized) return; // Prevent double initialization
+    
     try {
       mixpanel.init(MIXPANEL_TOKEN, { 
         debug: import.meta.env.DEV,
         track_pageview: true,
-        persistence: 'localStorage'
+        persistence: 'localStorage',
+        ip: false // Disable IP tracking to prevent some initialization issues
       });
       isInitialized = true;
       console.log('Analytics initialized');
