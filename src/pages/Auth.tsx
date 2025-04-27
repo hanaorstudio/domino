@@ -113,9 +113,17 @@ const Auth: React.FC = () => {
     setFormLoading(true);
     analytics.track('Anonymous Login Attempt');
     try {
-      const { error } = await supabase.auth.signInAnonymously();
+      const { error, data } = await supabase.auth.signInAnonymously();
       if (error) throw error;
+      
+      analytics.track('Anonymous Login Success', {
+        timestamp: new Date().toISOString(),
+      });
+      
     } catch (error: any) {
+      analytics.track('Anonymous Login Error', {
+        error_message: error.message
+      });
       setErrorMessage(error.message || 'Failed to sign in anonymously');
       setShowError(true);
       console.error('Anonymous login error:', error);

@@ -1,4 +1,3 @@
-
 import mixpanel from 'mixpanel-browser';
 import type { User } from '@supabase/supabase-js';
 
@@ -59,16 +58,24 @@ export const analytics = {
         $email: user.email,
         $created: user.created_at,
         auth_provider: user.app_metadata?.provider || 'email',
-        distinct_id: user.id, // Add distinct_id for consistent tracking
-        $userId: user.id // Add userId for cross-platform tracking
+        distinct_id: user.id,
+        $userId: user.id,
+        user_type: user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered',
+        is_anonymous: user.app_metadata?.provider === 'anonymous'
       };
       
-      // Add any other user metadata if available
       if (user.user_metadata?.full_name) {
         userProps.$name = user.user_metadata.full_name;
       }
       
       mixpanel.people.set(userProps);
+      
+      // Track user type event
+      this.track('User Identified', {
+        user_type: userProps.user_type,
+        auth_provider: userProps.auth_provider,
+        has_email: !!user.email,
+      });
     } catch (error) {
       console.error('Failed to identify user in analytics:', error);
     }
