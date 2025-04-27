@@ -1,17 +1,36 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GradientButton from '../components/ui/GradientButton';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { analytics } from '@/services/analytics';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  useEffect(() => {
+    if (analytics.isInitialized()) {
+      analytics.trackPageView('Home', {
+        is_authenticated: !!user,
+        user_type: user ? (user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered') : 'visitor'
+      });
+    }
+  }, [user]);
+
   const handleGetStarted = () => {
     if (user) {
+      analytics.track('Home CTA Clicked', { 
+        destination: 'dashboard',
+        user_status: 'authenticated',
+        user_type: user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered'
+      });
       navigate('/dashboard');
     } else {
+      analytics.track('Home CTA Clicked', { 
+        destination: 'auth',
+        user_status: 'unauthenticated'
+      });
       navigate('/auth');
     }
   };

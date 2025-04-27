@@ -27,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initialize analytics
   useEffect(() => {
     analytics.init();
+    console.log('Analytics initialized in AuthContext');
   }, []);
 
   useEffect(() => {
@@ -39,9 +40,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Track authentication events in analytics
       if (event === 'SIGNED_IN' && newSession?.user) {
+        console.log('User signed in, identifying in Mixpanel:', newSession.user.id);
         analytics.identify(newSession.user);
         analytics.track('User Signed In', {
-          method: newSession.user.app_metadata?.provider || 'email'
+          method: newSession.user.app_metadata?.provider || 'email',
+          user_id: newSession.user.id,
+          is_anonymous: newSession.user.app_metadata?.provider === 'anonymous'
         });
         
         // Use setTimeout to prevent blocking the main thread during auth state change
@@ -78,7 +82,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (data.session?.user) {
           // Identify the user with analytics when we find an existing session
+          console.log('Existing session found, identifying in Mixpanel:', data.session.user.id);
           analytics.identify(data.session.user);
+          
+          // Debug current Mixpanel state
+          analytics.debugState();
           
           setTimeout(() => {
             ensureUserProfileComplete(data.session!.user);
@@ -229,6 +237,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
+      // Before signing out, track the event while we still have the user
+      if (user) {
+        analytics.track('User Signing Out', {
+          user_id: user.id,
+          auth_provider: user.app_metadata?.provider || 'email'
+        });
+      }
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       

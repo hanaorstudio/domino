@@ -31,6 +31,7 @@ const queryClient = new QueryClient({
 // This ensures it only happens once during app startup
 try {
   analytics.init();
+  console.log("Analytics initialized in App.tsx");
 } catch (error) {
   console.error("Failed to initialize analytics during app startup:", error);
 }
@@ -38,14 +39,23 @@ try {
 // Page tracking component
 const PageTracking = () => {
   const location = useLocation();
+  const lastPathRef = React.useRef<string>("");
   
   useEffect(() => {
+    // Skip tracking if the path hasn't changed
+    if (lastPathRef.current === location.pathname) {
+      return;
+    }
+    
+    lastPathRef.current = location.pathname;
+    
     // Using a longer delay to ensure analytics is fully initialized
     const timer = setTimeout(() => {
       if (!analytics.isInitialized()) {
         // If not initialized, try initializing again
         try {
           analytics.init();
+          console.log("Analytics reinitialized in PageTracking");
         } catch (error) {
           console.error("Error reinitializing analytics:", error);
           return;
@@ -59,7 +69,11 @@ const PageTracking = () => {
                           location.pathname.charAt(1).toUpperCase() + 
                           location.pathname.slice(2).replace(/-/g, ' ');
                           
+          console.log(`Tracking page view: ${pageName}`);
           analytics.trackPageView(pageName, { path: location.pathname });
+          
+          // Debug current Mixpanel state
+          analytics.debugState();
         } catch (error) {
           console.error("Error tracking page view:", error);
         }

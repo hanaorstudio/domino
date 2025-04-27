@@ -1,3 +1,4 @@
+
 import mixpanel from 'mixpanel-browser';
 import type { User } from '@supabase/supabase-js';
 
@@ -51,6 +52,9 @@ export const analytics = {
     if (!isInitialized || !user) return;
     
     try {
+      console.log('Identifying user in Mixpanel:', user.id, 'Provider:', user.app_metadata?.provider);
+      
+      // Always identify with the user ID
       mixpanel.identify(user.id);
       
       // Set user properties for better tracking
@@ -68,6 +72,14 @@ export const analytics = {
         userProps.$name = user.user_metadata.full_name;
       }
       
+      // Set super properties that will be included with all events
+      mixpanel.register({
+        distinct_id: user.id,
+        user_id: user.id,
+        user_type: userProps.user_type,
+        auth_provider: userProps.auth_provider
+      });
+      
       mixpanel.people.set(userProps);
       
       // Track user type event
@@ -76,6 +88,8 @@ export const analytics = {
         auth_provider: userProps.auth_provider,
         has_email: !!user.email,
       });
+      
+      console.log('Mixpanel identification complete for user:', user.id);
     } catch (error) {
       console.error('Failed to identify user in analytics:', error);
     }
@@ -100,6 +114,7 @@ export const analytics = {
         timestamp: new Date().toISOString(),
       };
       
+      console.log(`Tracking event "${event}" with properties:`, eventProps);
       mixpanel.track(event, eventProps);
     } catch (error) {
       console.error(`Failed to track event "${event}":`, error);
@@ -136,9 +151,40 @@ export const analytics = {
     if (!isInitialized) return;
     
     try {
+      console.log('Resetting Mixpanel for user logout');
       mixpanel.reset();
     } catch (error) {
       console.error('Failed to reset analytics:', error);
+    }
+  },
+  
+  /**
+   * Debug the current state of Mixpanel for troubleshooting
+   */
+  debugState() {
+    if (!isInitialized) {
+      console.log('Mixpanel is not initialized');
+      return;
+    }
+    
+    try {
+      // @ts-ignore - Accessing internal mixpanel state for debugging
+      const distinctId = mixpanel.get_distinct_id();
+      // @ts-ignore - Accessing internal mixpanel state for debugging
+      const superProps = mixpanel._.config.superProperties;
+      
+      console.log('Current Mixpanel state:', {
+        distinct_id: distinctId,
+        super_properties: superProps
+      });
+      
+      return {
+        distinct_id: distinctId,
+        super_properties: superProps
+      };
+    } catch (error) {
+      console.error('Failed to get Mixpanel debug state:', error);
+      return null;
     }
   }
 };
