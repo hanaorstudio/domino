@@ -7,6 +7,7 @@ interface HotjarWindow extends Window {
   _hjSettings?: {
     hjid: number;
     hjsv: number;
+    hjdebug?: boolean;
   };
 }
 

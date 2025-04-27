@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { Session, User } from '@supabase/supabase-js';
 import { analytics } from '@/services/analytics';
+import { hotjar } from '@/services/hotjar';
+import '../types/hotjar.d.ts';
 
 type AuthContextType = {
   user: User | null;
@@ -23,30 +25,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Initialize analytics
   useEffect(() => {
     analytics.init();
     console.log('Analytics initialized in AuthContext');
   }, []);
 
-  // Initialize Hotjar identification for users
   const identifyHotjarUser = (user: User | null) => {
     try {
-      // Check if Hotjar is available
-      if (window.hj && user) {
+      if (user) {
         console.log('Identifying user in Hotjar:', user.id);
-        // Identify user in Hotjar
-        window.hj('identify', user.id, {
+        hotjar.identify(user.id, {
           email: user.email || 'unknown',
           user_id: user.id,
           provider: user.app_metadata?.provider || 'email',
           is_anonymous: user.app_metadata?.provider === 'anonymous',
           created_at: user.created_at
         });
-      } else if (window.hj) {
-        console.log('Hotjar ready, but no user to identify');
       } else {
-        console.log('Hotjar not available yet');
+        console.log('Hotjar ready, but no user to identify');
+        hotjar.identify(null);
       }
     } catch (error) {
       console.error('Error identifying user in Hotjar:', error);
@@ -54,17 +51,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // First set up auth state listener to prevent race conditions
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       console.log("Auth state change:", event, newSession?.user?.id || "No user");
       
       setSession(newSession);
       setUser(newSession?.user ?? null);
       
-      // Identify user in Hotjar if logged in
       identifyHotjarUser(newSession?.user ?? null);
       
-      // Track authentication events in analytics
       if (event === 'SIGNED_IN' && newSession?.user) {
         console.log('User signed in, identifying in Mixpanel:', newSession.user.id);
         analytics.identify(newSession.user);
@@ -74,7 +68,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           is_anonymous: newSession.user.app_metadata?.provider === 'anonymous'
         });
         
-        // Use setTimeout to prevent blocking the main thread during auth state change
         setTimeout(() => {
           ensureUserProfileComplete(newSession.user);
         }, 0);
@@ -86,11 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         analytics.track('User Signed Out');
         analytics.reset();
         
-        // Reset Hotjar user when signed out
-        if (window.hj) {
-          console.log('Resetting Hotjar user');
-          window.hj('identify', null);
-        }
+        hotjar.identify(null);
         
         setTimeout(() => {
           navigate('/', { replace: true });
@@ -98,7 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Then check for existing session
     const checkSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -112,15 +100,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(data.session);
         setUser(data.session?.user ?? null);
         
-        // Identify existing user in Hotjar
         identifyHotjarUser(data.session?.user ?? null);
         
         if (data.session?.user) {
-          // Identify the user with analytics when we find an existing session
           console.log('Existing session found, identifying in Mixpanel:', data.session.user.id);
           analytics.identify(data.session.user);
           
-          // Debug current Mixpanel state
           analytics.debugState();
           
           setTimeout(() => {
@@ -185,7 +170,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      // Make sure email is properly formatted
       const formattedEmail = email.trim().toLowerCase();
       console.log("Signing in with email:", formattedEmail);
       
@@ -214,11 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true);
-      // Make sure email is properly formatted
       const formattedEmail = email.trim().toLowerCase();
       console.log("Signing up with email:", formattedEmail);
       
-      // First, sign up the user
       const { error: signUpError, data } = await supabase.auth.signUp({ 
         email: formattedEmail, 
         password,
@@ -239,7 +221,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Sign up response:", data);
       
       if (!data.session) {
-        // If we don't have a session yet, immediately sign in - skip email verification
         console.log("No session after signup, attempting immediate sign in");
         
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -256,7 +237,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast.success('Registration successful! You are now signed in.');
       
-      // Adding a slight delay to allow profile creation
       setTimeout(() => {
         navigate('/dashboard', { replace: true });
       }, 500);
@@ -272,7 +252,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
-      // Before signing out, track the event while we still have the user
       if (user) {
         analytics.track('User Signing Out', {
           user_id: user.id,
@@ -283,10 +262,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Reset analytics on sign out
       analytics.reset();
       
-      // Force navigation after sign out
       navigate('/', { replace: true });
       toast.success('Successfully signed out');
     } catch (error: any) {
