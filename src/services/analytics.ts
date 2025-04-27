@@ -38,26 +38,24 @@ export const analytics = {
       console.log('Identifying user in Mixpanel:', {
         user_id: user.id,
         provider: user.app_metadata?.provider,
-        email: user.email
+        email: user.email,
+        metadata: user.user_metadata // Log full metadata for debugging
       });
       
       // Set the distinct_id to match Supabase user.id
       mixpanel.identify(user.id);
       
-      // Set user properties that will help with analysis
+      // Set user properties with clear mapping
       const userProps: Record<string, any> = {
+        $distinct_id: user.id, // Ensure this matches
         $email: user.email,
         $created: user.created_at,
+        $name: user.id, // Map user.id to $name for direct matching
         auth_provider: user.app_metadata?.provider || 'email',
-        distinct_id: user.id,
-        user_id: user.id,
         user_type: user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered',
-        is_anonymous: user.app_metadata?.provider === 'anonymous'
+        is_anonymous: user.app_metadata?.provider === 'anonymous',
+        supabase_id: user.id // Additional reference for verification
       };
-      
-      if (user.user_metadata?.full_name) {
-        userProps.$name = user.user_metadata.full_name;
-      }
       
       // Set super properties for all future events
       mixpanel.register({
@@ -74,12 +72,17 @@ export const analytics = {
         last_login: new Date().toISOString()
       });
       
-      // Track user identification event
+      // Track user identification event with explicit ID mapping
       this.track('User Identified', {
         user_type: userProps.user_type,
         auth_provider: userProps.auth_provider,
         has_email: !!user.email,
+        supabase_id: user.id,
+        mixpanel_distinct_id: user.id
       });
+      
+      // Debug the state after identification
+      this.debugState();
       
       console.log('Mixpanel identification complete for user:', user.id);
     } catch (error) {
