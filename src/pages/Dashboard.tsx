@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -25,13 +24,22 @@ const Dashboard: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Function to extract first name
   const getFirstName = (fullName: string | null) => {
     if (!fullName) return 'User';
     const firstName = fullName.split(' ')[0];
     return firstName.charAt(0).toUpperCase() + firstName.slice(1);
   };
 
+  useEffect(() => {
+    if (user) {
+      analytics.track('Dashboard Access', {
+        has_profile: !!profile,
+        has_roles: profile?.roles?.length > 0,
+        user_status: loading ? 'loading' : 'loaded'
+      });
+    }
+  }, [user, profile, loading]);
+  
   useEffect(() => {
     if (!user) return;
     
@@ -41,7 +49,6 @@ const Dashboard: React.FC = () => {
         const profileData = await fetchUserProfile(user.id);
         setProfile(profileData);
         
-        // Track profile loaded event
         analytics.track('Profile Loaded', {
           has_roles: profileData?.roles?.length > 0,
           has_location: !!profileData?.location
@@ -57,13 +64,11 @@ const Dashboard: React.FC = () => {
     getUserProfile();
   }, [user]);
   
-  // Track tab changes
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     analytics.track('Dashboard Tab Changed', { tab: value });
   };
   
-  // Track new application button click
   const handleNewApplication = () => {
     analytics.track('New Application Button Clicked');
     window.dispatchEvent(new CustomEvent('open-new-task-form'));

@@ -54,11 +54,13 @@ export const analytics = {
     try {
       mixpanel.identify(user.id);
       
-      // Set user properties
+      // Set user properties for better tracking
       const userProps: Record<string, any> = {
         $email: user.email,
         $created: user.created_at,
         auth_provider: user.app_metadata?.provider || 'email',
+        distinct_id: user.id, // Add distinct_id for consistent tracking
+        $userId: user.id // Add userId for cross-platform tracking
       };
       
       // Add any other user metadata if available
@@ -81,7 +83,17 @@ export const analytics = {
     if (!isInitialized) return;
     
     try {
-      mixpanel.track(event, properties);
+      // Generate a unique event ID
+      const eventId = crypto.randomUUID();
+      
+      // Add event metadata
+      const eventProps = {
+        ...properties,
+        event_id: eventId,
+        timestamp: new Date().toISOString(),
+      };
+      
+      mixpanel.track(event, eventProps);
     } catch (error) {
       console.error(`Failed to track event "${event}":`, error);
     }
@@ -96,8 +108,13 @@ export const analytics = {
     if (!isInitialized) return;
     
     try {
+      // Generate a unique event ID for page views
+      const eventId = crypto.randomUUID();
+      
       mixpanel.track('Page View', {
         page,
+        event_id: eventId,
+        timestamp: new Date().toISOString(),
         ...properties
       });
     } catch (error) {

@@ -80,13 +80,27 @@ const Auth: React.FC = () => {
     setErrorMessage('');
     
     try {
-      analytics.track('Registration Attempt', { email_domain: registerEmail.split('@')[1] });
+      analytics.track('Sign Up Attempt', { 
+        email_domain: registerEmail.split('@')[1],
+        event_type: 'registration_flow'
+      });
+      
       console.log(`Attempting registration with: ${registerEmail}`);
       await signUp(registerEmail, registerPassword, registerName);
-      // If signup immediately logs in, navigation is handled by AuthContext
-      // Otherwise, we switch to login tab
+      
+      analytics.track('Sign Up Success', {
+        email_domain: registerEmail.split('@')[1],
+        has_name: !!registerName,
+        event_type: 'registration_flow'
+      });
+      
       setActiveTab('login');
     } catch (error: any) {
+      analytics.track('Sign Up Error', {
+        error_message: error.message,
+        event_type: 'registration_flow'
+      });
+      
       setErrorMessage(error.message || 'Failed to create account. Please try again.');
       setShowError(true);
       console.error('Registration error:', error);
