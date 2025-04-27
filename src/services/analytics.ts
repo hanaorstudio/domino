@@ -1,10 +1,8 @@
-
 import mixpanel from 'mixpanel-browser';
-import { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 
 // Initialize Mixpanel with your project token
-// You should replace 'YOUR_MIXPANEL_TOKEN' with your actual token
-const MIXPANEL_TOKEN = 'YOUR_MIXPANEL_TOKEN';
+const MIXPANEL_TOKEN = '423e8645145210d3e8b6e83886f5c3d8';
 
 // Track whether Mixpanel has been initialized
 let isInitialized = false;
