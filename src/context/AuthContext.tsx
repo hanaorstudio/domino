@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -30,6 +29,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('Analytics initialized in AuthContext');
   }, []);
 
+  // Initialize Hotjar identification for users
+  const identifyHotjarUser = (user: User | null) => {
+    try {
+      // Check if Hotjar is available
+      if (window.hj && user) {
+        console.log('Identifying user in Hotjar:', user.id);
+        // Identify user in Hotjar
+        window.hj('identify', user.id, {
+          email: user.email || 'unknown',
+          user_id: user.id,
+          provider: user.app_metadata?.provider || 'email',
+          is_anonymous: user.app_metadata?.provider === 'anonymous',
+          created_at: user.created_at
+        });
+      } else if (window.hj) {
+        console.log('Hotjar ready, but no user to identify');
+      } else {
+        console.log('Hotjar not available yet');
+      }
+    } catch (error) {
+      console.error('Error identifying user in Hotjar:', error);
+    }
+  };
+
   useEffect(() => {
     // First set up auth state listener to prevent race conditions
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
@@ -37,6 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      
+      // Identify user in Hotjar if logged in
+      identifyHotjarUser(newSession?.user ?? null);
       
       // Track authentication events in analytics
       if (event === 'SIGNED_IN' && newSession?.user) {
@@ -60,6 +86,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         analytics.track('User Signed Out');
         analytics.reset();
         
+        // Reset Hotjar user when signed out
+        if (window.hj) {
+          console.log('Resetting Hotjar user');
+          window.hj('identify', null);
+        }
+        
         setTimeout(() => {
           navigate('/', { replace: true });
         }, 0);
@@ -79,6 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         setSession(data.session);
         setUser(data.session?.user ?? null);
+        
+        // Identify existing user in Hotjar
+        identifyHotjarUser(data.session?.user ?? null);
         
         if (data.session?.user) {
           // Identify the user with analytics when we find an existing session

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -16,6 +17,7 @@ import JobRecommendations from '@/components/dashboard/JobRecommendations';
 import { fetchUserProfile } from '@/services/userProfile';
 import { Profile } from '@/types/profile';
 import { analytics } from '@/services/analytics';
+import { hotjar } from '@/services/hotjar';
 
 const Dashboard: React.FC = () => {
   const isMobile = useIsMobile();
@@ -29,6 +31,25 @@ const Dashboard: React.FC = () => {
     const firstName = fullName.split(' ')[0];
     return firstName.charAt(0).toUpperCase() + firstName.slice(1);
   };
+
+  // Debug Hotjar on component mount
+  useEffect(() => {
+    console.log("Checking Hotjar availability in Dashboard");
+    hotjar.debugState();
+    
+    // Track dashboard view in Hotjar
+    hotjar.trackEvent('dashboard_view');
+    
+    if (user) {
+      // Ensure user is identified in Hotjar
+      hotjar.identify(user.id, {
+        email: user.email || 'unknown',
+        user_id: user.id,
+        provider: user.app_metadata?.provider || 'email',
+        is_anonymous: user.app_metadata?.provider === 'anonymous'
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -67,10 +88,14 @@ const Dashboard: React.FC = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     analytics.track('Dashboard Tab Changed', { tab: value });
+    // Track tab change in Hotjar
+    hotjar.trackEvent(`dashboard_tab_${value}`);
   };
   
   const handleNewApplication = () => {
     analytics.track('New Application Button Clicked');
+    // Track new application in Hotjar
+    hotjar.trackEvent('new_application_click');
     window.dispatchEvent(new CustomEvent('open-new-task-form'));
   };
   

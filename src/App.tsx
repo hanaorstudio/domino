@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import AIAssistant from "./pages/AIAssistant";
 import MetricsPage from "./pages/Metrics";
 import { analytics } from "./services/analytics";
+import { hotjar } from "./services/hotjar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,12 +28,13 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize analytics outside of React components
+// Initialize analytics and Hotjar outside of React components
 try {
   analytics.init();
-  console.log("Analytics initialized in App.tsx");
+  hotjar.init();
+  console.log("Analytics and Hotjar initialized in App.tsx");
 } catch (error) {
-  console.error("Failed to initialize analytics during app startup:", error);
+  console.error("Failed to initialize tracking during app startup:", error);
 }
 
 // Page tracking component with improved user identification
@@ -48,6 +50,9 @@ const PageTracking = () => {
     lastPathRef.current = location.pathname;
     
     const timer = setTimeout(() => {
+      // Debug Hotjar status on page change
+      hotjar.debugState();
+      
       if (!analytics.isInitialized()) {
         try {
           analytics.init();
@@ -69,6 +74,9 @@ const PageTracking = () => {
             path: location.pathname,
             timestamp: new Date().toISOString()
           });
+          
+          // Also track in Hotjar
+          hotjar.trackEvent(`page_view_${pageName.toLowerCase()}`);
           
           // Safely debug current Mixpanel state
           try {
