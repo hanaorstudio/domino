@@ -16,7 +16,16 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-GTBM37H3LG');
+      
+      // More robust configuration with multiple domains
+      gtag('config', 'G-GTBM37H3LG', {
+        'allowed_domains': [
+          'dominotasks.vercel.app', 
+          'localhost', 
+          'domino.vercel.app'
+        ],
+        'page_path': location.pathname
+      });
     </script>
     
     <!-- Hotjar Tracking Code -->

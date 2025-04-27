@@ -1,4 +1,3 @@
-
 type GTMEvent = {
   event: string;
   [key: string]: any;
@@ -23,7 +22,16 @@ export const gtm = {
       return;
     }
     
-    console.log("GTM ready for tracking");
+    // Add allowed domains configuration
+    window.gtag('config', 'G-GTBM37H3LG', {
+      'allowed_domains': [
+        'dominotasks.vercel.app', 
+        'localhost', 
+        'domino.vercel.app'  // Add other potential domains here
+      ]
+    });
+    
+    console.log("GTM ready for tracking with multi-domain support");
   },
 
   trackPageView(pageName: string, properties: Record<string, any> = {}) {
