@@ -1,69 +1,55 @@
-
 import mixpanel from 'mixpanel-browser';
 import type { User } from '@supabase/supabase-js';
 
-// Initialize Mixpanel with your project token
 const MIXPANEL_TOKEN = '423e8645145210d3e8b6e83886f5c3d8';
-
-// Track whether Mixpanel has been initialized
 let isInitialized = false;
 
-/**
- * Analytics service for tracking user events
- */
 export const analytics = {
-  /**
-   * Initialize the analytics service
-   */
   init() {
-    if (isInitialized) return; // Prevent double initialization
+    if (isInitialized) return;
     
     try {
       mixpanel.init(MIXPANEL_TOKEN, { 
         debug: import.meta.env.DEV,
         track_pageview: true,
         persistence: 'localStorage',
-        ip: false, // Disable IP tracking for better compatibility
-        ignore_dnt: true, // Ignore Do Not Track for development purposes
-        batch_requests: true, // Use batch requests for better performance
-        batch_flush_interval_ms: 5000 // Flush batch requests every 5 seconds
+        ip: false,
+        ignore_dnt: true,
+        batch_requests: true,
+        batch_flush_interval_ms: 5000
       });
       isInitialized = true;
       console.log('Analytics initialized successfully');
     } catch (error) {
       console.error('Failed to initialize analytics:', error);
-      // Set isInitialized to false so we can try again later
       isInitialized = false;
     }
   },
 
-  /**
-   * Check if analytics is initialized
-   */
   isInitialized() {
     return isInitialized;
   },
 
-  /**
-   * Identify a user
-   * @param user The user object from Supabase
-   */
   identify(user: User | null) {
     if (!isInitialized || !user) return;
     
     try {
-      console.log('Identifying user in Mixpanel:', user.id, 'Provider:', user.app_metadata?.provider);
+      console.log('Identifying user in Mixpanel:', {
+        user_id: user.id,
+        provider: user.app_metadata?.provider,
+        email: user.email
+      });
       
-      // Always identify with the user ID
+      // Set the distinct_id to match Supabase user.id
       mixpanel.identify(user.id);
       
-      // Set user properties for better tracking
+      // Set user properties that will help with analysis
       const userProps: Record<string, any> = {
         $email: user.email,
         $created: user.created_at,
         auth_provider: user.app_metadata?.provider || 'email',
         distinct_id: user.id,
-        $userId: user.id,
+        user_id: user.id,
         user_type: user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered',
         is_anonymous: user.app_metadata?.provider === 'anonymous'
       };
@@ -72,17 +58,22 @@ export const analytics = {
         userProps.$name = user.user_metadata.full_name;
       }
       
-      // Set super properties that will be included with all events
+      // Set super properties for all future events
       mixpanel.register({
         distinct_id: user.id,
         user_id: user.id,
         user_type: userProps.user_type,
-        auth_provider: userProps.auth_provider
+        auth_provider: userProps.auth_provider,
+        session_start: new Date().toISOString()
       });
       
-      mixpanel.people.set(userProps);
+      // Update user profile in Mixpanel
+      mixpanel.people.set({
+        ...userProps,
+        last_login: new Date().toISOString()
+      });
       
-      // Track user type event
+      // Track user identification event
       this.track('User Identified', {
         user_type: userProps.user_type,
         auth_provider: userProps.auth_provider,
@@ -95,11 +86,6 @@ export const analytics = {
     }
   },
 
-  /**
-   * Track a user event
-   * @param event The event name
-   * @param properties The event properties
-   */
   track(event: string, properties: Record<string, any> = {}) {
     if (!isInitialized) return;
     
@@ -121,11 +107,6 @@ export const analytics = {
     }
   },
 
-  /**
-   * Track a page view
-   * @param page The page name
-   * @param properties Additional properties
-   */
   trackPageView(page: string, properties: Record<string, any> = {}) {
     if (!isInitialized) return;
     
@@ -144,9 +125,6 @@ export const analytics = {
     }
   },
 
-  /**
-   * Reset tracking for the current user (typically on logout)
-   */
   reset() {
     if (!isInitialized) return;
     
@@ -157,10 +135,7 @@ export const analytics = {
       console.error('Failed to reset analytics:', error);
     }
   },
-  
-  /**
-   * Debug the current state of Mixpanel for troubleshooting
-   */
+
   debugState() {
     if (!isInitialized) {
       console.log('Mixpanel is not initialized');
@@ -173,9 +148,10 @@ export const analytics = {
       // @ts-ignore - Accessing internal mixpanel state for debugging
       const superProps = mixpanel._.config.superProperties;
       
-      console.log('Current Mixpanel state:', {
+      console.log('Current Mixpanel State:', {
         distinct_id: distinctId,
-        super_properties: superProps
+        super_properties: superProps,
+        initialized: isInitialized
       });
       
       return {

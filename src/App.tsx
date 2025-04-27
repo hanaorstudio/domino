@@ -1,4 +1,4 @@
-
+import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -36,23 +36,20 @@ try {
   console.error("Failed to initialize analytics during app startup:", error);
 }
 
-// Page tracking component
+// Page tracking component with improved user identification
 const PageTracking = () => {
   const location = useLocation();
   const lastPathRef = React.useRef<string>("");
   
   useEffect(() => {
-    // Skip tracking if the path hasn't changed
     if (lastPathRef.current === location.pathname) {
       return;
     }
     
     lastPathRef.current = location.pathname;
     
-    // Using a longer delay to ensure analytics is fully initialized
     const timer = setTimeout(() => {
       if (!analytics.isInitialized()) {
-        // If not initialized, try initializing again
         try {
           analytics.init();
           console.log("Analytics reinitialized in PageTracking");
@@ -62,15 +59,17 @@ const PageTracking = () => {
         }
       }
       
-      // Only track page view if initialization is successful
       if (analytics.isInitialized()) {
         try {
           const pageName = location.pathname === '/' ? 'Home' : 
                           location.pathname.charAt(1).toUpperCase() + 
                           location.pathname.slice(2).replace(/-/g, ' ');
-                          
+          
           console.log(`Tracking page view: ${pageName}`);
-          analytics.trackPageView(pageName, { path: location.pathname });
+          analytics.trackPageView(pageName, {
+            path: location.pathname,
+            timestamp: new Date().toISOString()
+          });
           
           // Debug current Mixpanel state
           analytics.debugState();
@@ -78,7 +77,7 @@ const PageTracking = () => {
           console.error("Error tracking page view:", error);
         }
       }
-    }, 500); // Increased delay to 500ms
+    }, 500);
     
     return () => clearTimeout(timer);
   }, [location]);
