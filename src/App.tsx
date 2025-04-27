@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,6 +16,7 @@ import AIAssistant from "./pages/AIAssistant";
 import MetricsPage from "./pages/Metrics";
 import { analytics } from "./services/analytics";
 import { hotjar } from "./services/hotjar";
+import { gtm } from "./services/gtm";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,16 +28,17 @@ const queryClient = new QueryClient({
   },
 });
 
-// Initialize analytics and Hotjar outside of React components
+// Initialize analytics, Hotjar and GTM outside of React components
 try {
   analytics.init();
   hotjar.init();
+  gtm.init();
   // Force Hotjar to record the current session
   setTimeout(() => {
     hotjar.forceRecord();
     hotjar.debugState();
   }, 1000);
-  console.log("Analytics and Hotjar initialized in App.tsx");
+  console.log("Analytics, Hotjar and GTM initialized in App.tsx");
 } catch (error) {
   console.error("Failed to initialize tracking during app startup:", error);
 }
@@ -83,8 +84,11 @@ const PageTracking = () => {
             timestamp: new Date().toISOString()
           });
           
-          // Also track in Hotjar
-          hotjar.trackEvent(`page_view_${pageName.toLowerCase()}`);
+          // Track in GTM
+          gtm.trackPageView(pageName, {
+            path: location.pathname,
+            timestamp: new Date().toISOString()
+          });
           
           // Safely debug current Mixpanel state
           try {
