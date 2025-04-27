@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,7 +15,6 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AIAssistant from "./pages/AIAssistant";
 import MetricsPage from "./pages/Metrics";
-import { useEffect } from "react";
 import { analytics } from "./services/analytics";
 
 const queryClient = new QueryClient({
@@ -28,7 +28,6 @@ const queryClient = new QueryClient({
 });
 
 // Initialize analytics outside of React components
-// This ensures it only happens once during app startup
 try {
   analytics.init();
   console.log("Analytics initialized in App.tsx");
@@ -41,7 +40,7 @@ const PageTracking = () => {
   const location = useLocation();
   const lastPathRef = React.useRef<string>("");
   
-  useEffect(() => {
+  React.useEffect(() => {
     if (lastPathRef.current === location.pathname) {
       return;
     }
