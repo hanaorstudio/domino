@@ -27,16 +27,23 @@ const queryClient = new QueryClient({
   },
 });
 
+// Initialize analytics outside of component to ensure it happens only once
+analytics.init();
+
 // Page tracking component
 const PageTracking = () => {
   const location = useLocation();
   
   useEffect(() => {
-    const pageName = location.pathname === '/' ? 'Home' : 
-                     location.pathname.charAt(1).toUpperCase() + 
-                     location.pathname.slice(2).replace(/-/g, ' ');
-                     
-    analytics.trackPageView(pageName, { path: location.pathname });
+    try {
+      const pageName = location.pathname === '/' ? 'Home' : 
+                       location.pathname.charAt(1).toUpperCase() + 
+                       location.pathname.slice(2).replace(/-/g, ' ');
+                       
+      analytics.trackPageView(pageName, { path: location.pathname });
+    } catch (error) {
+      console.error("Error tracking page view:", error);
+    }
   }, [location]);
   
   return null;
