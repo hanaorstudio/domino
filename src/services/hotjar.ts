@@ -7,7 +7,12 @@ export const hotjar = {
    * Initialize Hotjar tracking
    */
   init() {
-    if (typeof window === 'undefined' || !window.hj) {
+    if (typeof window === 'undefined') {
+      console.log("Window not available for Hotjar initialization");
+      return;
+    }
+    
+    if (!window.hj) {
       console.log("Hotjar not available for initialization");
       return;
     }
@@ -19,7 +24,12 @@ export const hotjar = {
    * Identify user in Hotjar
    */
   identify(userId: string | null, attributes: Record<string, any> = {}) {
-    if (typeof window === 'undefined' || !window.hj) {
+    if (typeof window === 'undefined') {
+      console.log("Window not available for Hotjar identification");
+      return;
+    }
+    
+    if (!window.hj) {
       console.log("Hotjar not available for identification");
       return;
     }
@@ -41,7 +51,12 @@ export const hotjar = {
    * Track event in Hotjar
    */
   trackEvent(eventName: string) {
-    if (typeof window === 'undefined' || !window.hj) {
+    if (typeof window === 'undefined') {
+      console.log("Window not available for event tracking");
+      return;
+    }
+    
+    if (!window.hj) {
       console.log(`Hotjar not available for event tracking: ${eventName}`);
       return;
     }
