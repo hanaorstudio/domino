@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/layout/NavBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -35,10 +34,15 @@ const Dashboard: React.FC = () => {
   // Debug Hotjar on component mount
   useEffect(() => {
     console.log("Checking Hotjar availability in Dashboard");
+    
+    // Force Hotjar recording on dashboard view
+    hotjar.forceRecord();
+    
+    // Debug Hotjar state
     hotjar.debugState();
     
-    // Track dashboard view in Hotjar
-    hotjar.trackEvent('dashboard_view');
+    // Track dashboard view in Hotjar with a more specific event name
+    hotjar.trackEvent('dashboard_loaded');
     
     if (user) {
       // Ensure user is identified in Hotjar
@@ -46,9 +50,17 @@ const Dashboard: React.FC = () => {
         email: user.email || 'unknown',
         user_id: user.id,
         provider: user.app_metadata?.provider || 'email',
-        is_anonymous: user.app_metadata?.provider === 'anonymous'
+        is_anonymous: user.app_metadata?.provider === 'anonymous',
+        date_visited: new Date().toISOString()
       });
     }
+    
+    // Test Hotjar recording with interaction events
+    const testHotjarInterval = setInterval(() => {
+      hotjar.trackEvent('dashboard_heartbeat');
+    }, 30000); // every 30 seconds
+    
+    return () => clearInterval(testHotjarInterval);
   }, []);
 
   useEffect(() => {
@@ -88,14 +100,14 @@ const Dashboard: React.FC = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     analytics.track('Dashboard Tab Changed', { tab: value });
-    // Track tab change in Hotjar
-    hotjar.trackEvent(`dashboard_tab_${value}`);
+    // Track tab change in Hotjar with more specific event name
+    hotjar.trackEvent(`dashboard_tab_changed_${value}`);
   };
   
   const handleNewApplication = () => {
     analytics.track('New Application Button Clicked');
-    // Track new application in Hotjar
-    hotjar.trackEvent('new_application_click');
+    // Track new application in Hotjar with more specific event name
+    hotjar.trackEvent('new_application_button_clicked');
     window.dispatchEvent(new CustomEvent('open-new-task-form'));
   };
   

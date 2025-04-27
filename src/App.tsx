@@ -32,6 +32,11 @@ const queryClient = new QueryClient({
 try {
   analytics.init();
   hotjar.init();
+  // Force Hotjar to record the current session
+  setTimeout(() => {
+    hotjar.forceRecord();
+    hotjar.debugState();
+  }, 1000);
   console.log("Analytics and Hotjar initialized in App.tsx");
 } catch (error) {
   console.error("Failed to initialize tracking during app startup:", error);
@@ -50,6 +55,9 @@ const PageTracking = () => {
     lastPathRef.current = location.pathname;
     
     const timer = setTimeout(() => {
+      // Force Hotjar recording on page change
+      hotjar.forceRecord();
+      
       // Debug Hotjar status on page change
       hotjar.debugState();
       
