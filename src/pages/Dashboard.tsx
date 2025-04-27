@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import JobRecommendations from '@/components/dashboard/JobRecommendations';
 import { fetchUserProfile } from '@/services/userProfile';
 import { Profile } from '@/types/profile';
+import { analytics } from '@/services/analytics';
 
 const Dashboard: React.FC = () => {
   const isMobile = useIsMobile();
@@ -39,6 +40,12 @@ const Dashboard: React.FC = () => {
       try {
         const profileData = await fetchUserProfile(user.id);
         setProfile(profileData);
+        
+        // Track profile loaded event
+        analytics.track('Profile Loaded', {
+          has_roles: profileData?.roles?.length > 0,
+          has_location: !!profileData?.location
+        });
       } catch (error: any) {
         console.error('Error fetching profile:', error);
         toast.error('Failed to load user profile');
@@ -49,6 +56,18 @@ const Dashboard: React.FC = () => {
     
     getUserProfile();
   }, [user]);
+  
+  // Track tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    analytics.track('Dashboard Tab Changed', { tab: value });
+  };
+  
+  // Track new application button click
+  const handleNewApplication = () => {
+    analytics.track('New Application Button Clicked');
+    window.dispatchEvent(new CustomEvent('open-new-task-form'));
+  };
   
   return (
     <div className="flex h-screen w-full bg-gradient-light">
@@ -68,7 +87,7 @@ const Dashboard: React.FC = () => {
           <Stats />
           
           <div className="mb-6">
-            <Tabs defaultValue="board" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs defaultValue="board" value={activeTab} onValueChange={handleTabChange} className="w-full">
               <div className="flex items-center justify-between mb-4">
                 <TabsList className="grid grid-cols-3 w-full max-w-md">
                   <TabsTrigger value="board" className="flex items-center gap-2">
@@ -88,7 +107,7 @@ const Dashboard: React.FC = () => {
                 <GradientButton 
                   size="sm" 
                   gradient="pink-green"
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-new-task-form'))}
+                  onClick={handleNewApplication}
                 >
                   New Application
                 </GradientButton>

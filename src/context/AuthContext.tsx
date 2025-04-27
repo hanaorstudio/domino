@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { Session, User } from '@supabase/supabase-js';
+import { analytics } from '@/services/analytics';
 
 type AuthContextType = {
   user: User | null;
@@ -23,6 +24,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Initialize analytics
+  useEffect(() => {
+    analytics.init();
+  }, []);
+
   useEffect(() => {
     // First set up auth state listener to prevent race conditions
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
@@ -31,7 +37,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(newSession);
       setUser(newSession?.user ?? null);
       
+      // Track authentication events in analytics
       if (event === 'SIGNED_IN' && newSession?.user) {
+        analytics.identify(newSession.user);
+        analytics.track('User Signed In', {
+          method: newSession.user.app_metadata?.provider || 'email'
+        });
+        
         // Use setTimeout to prevent blocking the main thread during auth state change
         setTimeout(() => {
           ensureUserProfileComplete(newSession.user);
@@ -41,6 +53,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           navigate('/dashboard', { replace: true });
         }, 0);
       } else if (event === 'SIGNED_OUT') {
+        analytics.track('User Signed Out');
+        analytics.reset();
+        
         setTimeout(() => {
           navigate('/', { replace: true });
         }, 0);
@@ -62,6 +77,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(data.session?.user ?? null);
         
         if (data.session?.user) {
+          // Identify the user with analytics when we find an existing session
+          analytics.identify(data.session.user);
+          
           setTimeout(() => {
             ensureUserProfileComplete(data.session!.user);
             
@@ -135,6 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error("Sign in error:", error.message);
+        analytics.track('Auth Error', { type: 'Sign In', error: error.message });
         toast.error(error.message || 'Error signing in');
         throw error;
       }
@@ -168,10 +187,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (signUpError) {
         console.error("Sign up error:", signUpError.message);
+        analytics.track('Auth Error', { type: 'Sign Up', error: signUpError.message });
         toast.error(signUpError.message || 'Error signing up');
         throw signUpError;
       }
       
+      analytics.track('User Signed Up', { has_session: !!data.session });
       console.log("Sign up response:", data);
       
       if (!data.session) {
@@ -210,6 +231,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // Reset analytics on sign out
+      analytics.reset();
       
       // Force navigation after sign out
       navigate('/', { replace: true });

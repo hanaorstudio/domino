@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { analytics } from '@/services/analytics';
 
 const Auth: React.FC = () => {
   const { user, signIn, signUp, loading: authLoading } = useAuth();
@@ -34,6 +36,12 @@ const Auth: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Track tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    analytics.track('Auth Tab Changed', { tab: value });
+  };
+
   // Check for user and handle loading state
   if (user && !authLoading) {
     return <Navigate to="/dashboard" replace />;
@@ -53,6 +61,7 @@ const Auth: React.FC = () => {
     setErrorMessage('');
     
     try {
+      analytics.track('Login Attempt', { email_domain: loginEmail.split('@')[1] });
       console.log(`Attempting login with: ${loginEmail}`);
       await signIn(loginEmail, loginPassword);
       // Navigation handled in AuthContext
@@ -71,6 +80,7 @@ const Auth: React.FC = () => {
     setErrorMessage('');
     
     try {
+      analytics.track('Registration Attempt', { email_domain: registerEmail.split('@')[1] });
       console.log(`Attempting registration with: ${registerEmail}`);
       await signUp(registerEmail, registerPassword, registerName);
       // If signup immediately logs in, navigation is handled by AuthContext
@@ -87,6 +97,7 @@ const Auth: React.FC = () => {
 
   const handleAnonymousLogin = async () => {
     setFormLoading(true);
+    analytics.track('Anonymous Login Attempt');
     try {
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;

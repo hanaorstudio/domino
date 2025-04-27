@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
@@ -14,6 +14,8 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AIAssistant from "./pages/AIAssistant";
 import MetricsPage from "./pages/Metrics";
+import { useEffect } from "react";
+import { analytics } from "./services/analytics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +27,21 @@ const queryClient = new QueryClient({
   },
 });
 
+// Page tracking component
+const PageTracking = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    const pageName = location.pathname === '/' ? 'Home' : 
+                     location.pathname.charAt(1).toUpperCase() + 
+                     location.pathname.slice(2).replace(/-/g, ' ');
+                     
+    analytics.trackPageView(pageName, { path: location.pathname });
+  }, [location]);
+  
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -32,6 +49,7 @@ const App = () => (
       <Sonner position="top-right" closeButton />
       <BrowserRouter>
         <AuthProvider>
+          <PageTracking />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
