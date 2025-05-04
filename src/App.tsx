@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -33,10 +34,13 @@ try {
   analytics.init();
   hotjar.init();
   gtm.init();
+  gtm.debugState(); // Add immediate debug check
+  
   // Force Hotjar to record the current session
   setTimeout(() => {
     hotjar.forceRecord();
     hotjar.debugState();
+    gtm.debugState(); // Check GTM after a delay
   }, 1000);
   console.log("Analytics, Hotjar and GTM initialized in App.tsx");
 } catch (error) {
@@ -62,6 +66,9 @@ const PageTracking = () => {
       // Debug Hotjar status on page change
       hotjar.debugState();
       
+      // Debug GTM status on page change
+      gtm.debugState();
+      
       if (!analytics.isInitialized()) {
         try {
           analytics.init();
@@ -84,10 +91,12 @@ const PageTracking = () => {
             timestamp: new Date().toISOString()
           });
           
-          // Track in GTM
+          // Track in GTM with enhanced debugging
           gtm.trackPageView(pageName, {
             path: location.pathname,
-            timestamp: new Date().toISOString()
+            url: window.location.href,
+            timestamp: new Date().toISOString(),
+            route_change: true
           });
           
           // Safely debug current Mixpanel state

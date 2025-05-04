@@ -1,38 +1,77 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GradientButton from '../components/ui/GradientButton';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { analytics } from '@/services/analytics';
+import { gtm } from '@/services/gtm';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
+    // Make sure GTM tracking is initialized
+    gtm.debugState();
+    
+    const userStatus = user ? 
+      (user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered') : 
+      'visitor';
+      
+    // Track page view with both analytics services
     if (analytics.isInitialized()) {
       analytics.trackPageView('Home', {
         is_authenticated: !!user,
-        user_type: user ? (user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered') : 'visitor'
+        user_type: userStatus
       });
     }
+    
+    // Explicitly track homepage view in GTM
+    gtm.trackPageView('Home', {
+      is_authenticated: !!user,
+      user_type: userStatus,
+      referrer: document.referrer,
+      landing_page: true,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Debug event to verify GTM is working
+    gtm.trackEvent('home_page_loaded', {
+      is_authenticated: !!user,
+      user_type: userStatus,
+      debug: true
+    });
+    
+    // Log to console for verification
+    console.log('Index page loaded, tracking events sent', {
+      user: !!user,
+      userType: userStatus
+    });
   }, [user]);
 
   const handleGetStarted = () => {
-    if (user) {
-      analytics.track('Home CTA Clicked', { 
-        destination: 'dashboard',
-        user_status: 'authenticated',
-        user_type: user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered'
-      });
-      navigate('/dashboard');
-    } else {
-      analytics.track('Home CTA Clicked', { 
-        destination: 'auth',
-        user_status: 'unauthenticated'
-      });
-      navigate('/auth');
-    }
+    const destination = user ? 'dashboard' : 'auth';
+    const userStatus = user ? 
+      (user.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered') : 
+      'unauthenticated';
+      
+    // Track with both services
+    analytics.track('Home CTA Clicked', { 
+      destination,
+      user_status: user ? 'authenticated' : 'unauthenticated',
+      user_type: user?.app_metadata?.provider === 'anonymous' ? 'anonymous' : 'registered'
+    });
+    
+    // Track in GTM
+    gtm.trackEvent('home_cta_clicked', {
+      destination,
+      user_status: user ? 'authenticated' : 'unauthenticated',
+      user_type: userStatus,
+      timestamp: new Date().toISOString()
+    });
+    
+    navigate(user ? '/dashboard' : '/auth');
   };
 
   return (
